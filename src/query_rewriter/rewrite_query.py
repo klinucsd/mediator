@@ -1,3 +1,4 @@
+
 from src.data_loader.data_loader import DataLoaderError
 from src.data_loader.data_loader_factory import DataLoaderFactory
 from src.db.mediator_db import db
@@ -26,6 +27,6 @@ def rewrite_query(username, query, in_transaction):
             else:
                 raise DataLoaderError(f"No data loader was found for {url}")
 
-        translated_sql = f"SELECT * FROM md_v_data_status WHERE url={url}"
+        translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{url}'"
 
     return translated_sql
