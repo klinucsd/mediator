@@ -6,6 +6,26 @@ from psycopg2.pool import ThreadedConnectionPool
 
 class MediatorDatabase():
     def __init__(self):
+        """
+        Initializes a MediatorDB instance with a connection pool.
+
+        The connection pool is configured with parameters from the configuration.
+
+        Configurations:
+        - minconn: Minimum number of connections in the pool.
+        - maxconn: Maximum number of connections in the pool.
+        - host: Database host address.
+        - database: Database name.
+        - user: Database user.
+        - password: Database password.
+        - port: Database port.
+
+        Connection pool is created using the ThreadedConnectionPool.
+
+        Returns:
+            None
+        """
+
         # setup a connection pool
         self.connection_pool = ThreadedConnectionPool(
             minconn=2,
@@ -18,6 +38,16 @@ class MediatorDatabase():
         )
 
     def data_exists_for_urls(self, urls):
+        """
+        Checks if data exists in the md_data_status table for the given list of URLs.
+
+        Args:
+            urls (list): List of URLs to check for data existence.
+
+        Returns:
+            bool: True if data exists for any URL, False otherwise.
+        """
+
         exist = False
 
         # Grab a connection from the pool and save data
@@ -40,6 +70,18 @@ class MediatorDatabase():
         return exist
 
     def create_new_data_status(self, url, username, table_name):
+        """
+        Creates a new entry in the md_data_status table with the provided details.
+
+        Args:
+            url (str): The URL for which data status is being created.
+            username (str): The username of the user requesting data.
+            table_name (str): The name of the table associated with the URL.
+
+        Returns:
+            None
+        """
+
         # Grab a connection from the pool and save data
         with self.connection_pool.getconn() as connection:
             with connection.cursor() as cursor:
@@ -64,6 +106,17 @@ class MediatorDatabase():
                 connection.commit()
 
     def update_data_status(self, url, status):
+        """
+        Updates the status of a data entry in the md_data_status table.
+
+        Args:
+            url (str): The URL for which data status is being updated.
+            status (str): The new status to be set for the given URL.
+
+        Returns:
+            None
+        """
+
         # Grab a connection from the pool and save data
         with self.connection_pool.getconn() as connection:
             with connection.cursor() as cursor:
@@ -77,6 +130,16 @@ class MediatorDatabase():
                 connection.commit()
 
     def save_fake_data(self, table_name):
+        """
+        Saves fake data into a specified table.
+
+        Args:
+            table_name (str): The name of the table where fake data will be saved.
+
+        Returns:
+            None
+        """
+
         # Grab a connection from the pool and save data
         with self.connection_pool.getconn() as connection:
             with connection.cursor() as cursor:
