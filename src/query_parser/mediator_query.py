@@ -26,7 +26,7 @@ class MediatorQuery():
         """
         self.query = query
 
-        # translate the query into a sql (without processing md functions)
+        # Translate the query into a sql (without processing md functions)
         self.ast = pglast.parse_sql(self.query)
         visitor = URLReplacementVisitor()
         visitor(self.ast)

@@ -49,9 +49,11 @@ class DataLoaderFactory():
 
         # Iterate through all the data loaders specified in .env
         for class_path in config('data_loaders', default='', cast=Csv()):
-            # convert string to a real class
+            # Convert string to a real class
             data_loader_class = __get_loader__(class_path)
+
+            # If the data loader can process the URL, use it
             if data_loader_class.validate(url):
-                # use the data loader
+                # Use the data loader
                 return data_loader_class(url, table_name, username)
         return None

@@ -26,7 +26,7 @@ class MediatorDatabase():
             None
         """
 
-        # setup a connection pool
+        # Setup a connection pool
         self.connection_pool = ThreadedConnectionPool(
             minconn=2,
             maxconn=config('max_connections'),
