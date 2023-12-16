@@ -18,10 +18,10 @@ class FetchDataStatement():
     @staticmethod
     def validate(query):
         """
-        Checks if the query is an md_fetch_data statement.
+        Checks if the query is a md_fetch_data statement.
 
         Returns:
-            bool: True if the query is an md_fetch_data statement, False otherwise.
+            bool: True if the query is a md_fetch_data statement, False otherwise.
         """
         pattern = r"\s*SELECT\s+md_fetch_data\s*\(\s*'([^']+)'\s*\)\s*"
         match = re.match(pattern, query, re.IGNORECASE)
