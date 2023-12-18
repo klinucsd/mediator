@@ -1,3 +1,19 @@
+# ------------------------------------------------------------------------------
+# The following code sets the PYTHONPATH of the code in the pgBouncer environment.
+# pgBouncer uses the Cython interpreter to run the mediator's Python code,
+# but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
+# So this code is needed to set the location of the Python code.
+import sys
+
+from decouple import config, UndefinedValueError
+
+try:
+    sys.path.append(config('python_code_home'))
+except UndefinedValueError:
+    pass
+# End of Setting
+# ------------------------------------------------------------------------------
+
 from threading import Thread
 
 from src.db.mediator_db import db
