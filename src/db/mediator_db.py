@@ -1,3 +1,5 @@
+import datetime
+
 from decouple import config
 from faker import Faker
 from psycopg2 import sql
@@ -128,6 +130,66 @@ class MediatorDatabase():
 
                 # Commit the transaction
                 connection.commit()
+
+    def get_invalid_urls(self, urls):
+        """
+        Get all URLs without the status 'Saved'
+
+        Args:
+            urls (list): List of URLs.
+
+        Returns:
+            list: URLs without the status 'Saved'
+        """
+        if not urls:
+            return []
+
+        # Grab a connection from the pool and save data
+        with self.connection_pool.getconn() as connection:
+            with connection.cursor() as cursor:
+                # Create a parameterized query with an IN clause
+                query = """
+                    SELECT checked_url
+                    FROM unnest(%s) AS checked_url
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM md_data_status
+                        WHERE md_data_status.url = checked_url AND md_data_status.status = 'Saved'
+                    );
+                """
+
+                # Get the fully substituted and escaped query string
+                # substituted_query = cursor.mogrify(query, (urls,))
+
+                # Execute the prepared statement with the array as a parameter
+                cursor.execute(query, (urls,))
+
+                # Fetch all the URLs with status not 'Saved'
+                invalid_tables = [row[0] for row in cursor.fetchall()]
+                return invalid_tables
+
+        return url_tables
+
+    def update_last_used_times(self, urls):
+        """
+        Updated the last_used_time for urls to now
+
+        Args:
+            urls (list): List of URLs.
+        """
+
+        # Grab a connection from the pool and save data
+        with self.connection_pool.getconn() as connection:
+            with connection.cursor() as cursor:
+                # Create a parameterized statement for updating
+                query = """
+                    UPDATE md_data_status
+                    SET last_used_time = now()
+                    WHERE url = ANY(%s);
+                """
+
+                # Execute the statement
+                cursor.execute(query, (urls,))
 
     def save_fake_data(self, table_name):
         """

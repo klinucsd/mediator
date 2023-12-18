@@ -17,6 +17,28 @@ class DataLoader(ABC):
 
     @staticmethod
     @abstractmethod
+    def get_name() -> str:
+        """
+        Get the name of this data loader.
+
+        Return:
+            str: the name of this data loader
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_description() -> str:
+        """
+        Get the description of this data loader.
+
+        Return:
+            str: the description of this data loader
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
     def validate(url) -> bool:
         """
         Validates whether this data loader can process the data at the given URL.

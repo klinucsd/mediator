@@ -1,5 +1,9 @@
+from threading import Thread
+
+from src.db.mediator_db import db
 from src.query_parser.fetch_data_statement import FetchDataStatement
 from src.query_parser.mediator_query import MediatorQuery
+from src.query_parser.list_data_loaders_statement import ListDataLoadersStatement
 
 
 def rewrite_query(username, query, in_transaction):
@@ -21,18 +25,40 @@ def rewrite_query(username, query, in_transaction):
     md_query = MediatorQuery(query)
     translated_sql = md_query.sql
 
-    # Check if the query is md_fetch_data statement
+    # Check if the query is "SELECT md_fetch_url(URL)" statement
     if FetchDataStatement.validate(query):
         # Construct a FetchDataStatement
         fetch_data_statement = FetchDataStatement(md_query)
 
-        # Fetch data in a *** SEPARATE PROCESS *** (todo)
-        fetch_data_statement.fetch_data(username)
+        # Fetch data in a separate thread
+        Thread(target=fetch_data_statement.fetch_data, args=[username]).start()
 
         # Modify the translated SQL to query the md_v_data_status table for the specific URL
         translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{fetch_data_statement.url}'"
 
+    # Check if the query is "SELECT md_list_data_loaders()" statement
+    elif ListDataLoadersStatement.validate(query):
+        # Construct a ListDataLoadersStatement
+        list_data_loaders_statement = ListDataLoadersStatement(md_query)
+
+        # Modify the translated SQL
+        translated_sql = list_data_loaders_statement.to_sql()
+
     # Do something similar for other statements
-    # Don't write the details of processing other statements here to keep this method clearn
+
+    # Validate that all the URLs used in the query are ready to query
+    else:
+        # Get all the URLs used in the query
+        urls = list(md_query.url_to_table_mapping.keys())
+        if urls:
+            # Get all invalid URLs
+            invalid_urls = db.get_invalid_urls(urls)
+            if not invalid_urls:
+                # All the URLs are valid. Update the last used times for URLs
+                db.update_last_used_times(urls)
+            else:
+                # Some invalid URLs exist
+                error_message = f'The following URLs are not ready to query: {", ".join(invalid_urls)}'
+                return f"SELECT md_mediator_error('{error_message}');"
 
     return translated_sql

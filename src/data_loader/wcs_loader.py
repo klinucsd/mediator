@@ -3,6 +3,15 @@ from src.db.mediator_db import db
 
 
 class WCSLoader(DataLoader):
+
+    @staticmethod
+    def get_name() -> str:
+        return 'GeoServer WCS Loader'
+
+    @staticmethod
+    def get_description() -> str:
+        return 'GeoServer WCS Loader'
+
     @staticmethod
     def validate(url):
         """

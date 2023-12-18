@@ -1,8 +1,18 @@
+import time
+
 from src.data_loader.data_loader import DataLoader
 from src.db.mediator_db import db
 
 
 class ArcGISFeatureServiceLoader(DataLoader):
+
+    @staticmethod
+    def get_name() -> str:
+        return 'ArcGIS Feature Service Loader'
+
+    @staticmethod
+    def get_description() -> str:
+        return 'ArcGIS Feature Service Loader'
 
     @staticmethod
     def validate(url):

@@ -48,6 +48,16 @@ class FetchDataStatement():
         return None
 
     def fetch_data(self, username):
+        """
+        Fetches data for the URL if it doesn't already exist in the database.
+
+        Args:
+            username (str): The username associated with the data loading.
+
+        Raises:
+            DataLoaderError: If no data loader is found for the URL.
+        """
+
         # Check if data for the URL already exists in the database
         if not db.data_exists_for_urls([self.url]):
             # Start a new process to load data
