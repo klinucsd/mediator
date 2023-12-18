@@ -72,7 +72,7 @@ class FetchDataStatement():
                 data_loader.load()
             else:
                 # Raise an error if no data loader is found for the URL
-                raise DataLoaderError(f"No data loader was found for {url}")
+                raise DataLoaderError(f"No data loader was found for {self.url}")
 
 
 class FetchDataStatementError(Exception):
