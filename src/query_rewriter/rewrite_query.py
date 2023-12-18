@@ -46,8 +46,9 @@ def rewrite_query(username, query, in_transaction):
         # Construct a FetchDataStatement
         fetch_data_statement = FetchDataStatement(md_query)
 
-        # Fetch data in a separate thread
-        Thread(target=fetch_data_statement.fetch_data, args=[username]).start()
+        # Try to fetch data in a separate thread, but got errors when start a new thread. 
+        # Thread(target=fetch_data_statement.fetch_data, args=[username]).start()
+        fetch_data_statement.fetch_data(username)
 
         # Modify the translated SQL to query the md_v_data_status table for the specific URL
         translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{fetch_data_statement.url}'"
