@@ -4,6 +4,7 @@
 # but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
 # So this code is needed to set the location of the Python code.
 import sys
+from threading import Thread
 
 from decouple import config, UndefinedValueError
 
@@ -14,12 +15,14 @@ except UndefinedValueError:
 # End of Setting
 # ------------------------------------------------------------------------------
 
-from threading import Thread
-
 from src.db.mediator_db import db
 from src.query_parser.fetch_data_statement import FetchDataStatement
 from src.query_parser.mediator_query import MediatorQuery
 from src.query_parser.list_data_loaders_statement import ListDataLoadersStatement
+
+
+def thread_fetch_data(fetch_statement, username):
+    fetch_statement.fetch_data(username)
 
 
 def rewrite_query(username, query, in_transaction):
@@ -46,9 +49,11 @@ def rewrite_query(username, query, in_transaction):
         # Construct a FetchDataStatement
         fetch_data_statement = FetchDataStatement(md_query)
 
-        # Try to fetch data in a separate thread, but got errors when start a new thread. 
-        # Thread(target=fetch_data_statement.fetch_data, args=[username]).start()
-        fetch_data_statement.fetch_data(username)
+        # Fetch data in a separate thread
+        thread = Thread(target=thread_fetch_data, args=[fetch_data_statement, username])
+        thread.start()
+        thread.join()    # seem this is important, otherwise it won't work
+        # fetch_data_statement.fetch_data(username)
 
         # Modify the translated SQL to query the md_v_data_status table for the specific URL
         translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{fetch_data_statement.url}'"

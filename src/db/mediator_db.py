@@ -1,5 +1,3 @@
-import datetime
-
 from decouple import config
 from faker import Faker
 from psycopg2 import sql
