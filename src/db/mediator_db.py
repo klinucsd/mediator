@@ -1,3 +1,6 @@
+import json
+
+import psycopg2
 from decouple import config
 from faker import Faker
 from psycopg2 import sql
@@ -188,6 +191,18 @@ class MediatorDatabase():
 
                 # Execute the statement
                 cursor.execute(query, (urls,))
+
+    def notify_data_load(self, url, username, table_name):
+        with self.connection_pool.getconn() as connection:
+            connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+            with connection.cursor() as cursor:
+                message = {
+                    'url': url,
+                    'username': username,
+                    'table_name': table_name
+                }
+                cursor.execute(f"NOTIFY {config('data_load_notify_channel')}, "
+                               f"'{json.dumps(message)}';")
 
     def save_fake_data(self, table_name):
         """

@@ -47,6 +47,23 @@ class FetchDataStatement():
                 return url
         return None
 
+    def notify(self, username):
+        # Check if data for the URL already exists in the database
+        if not db.data_exists_for_urls([self.url]):
+            # Create a data loader from the url
+            data_loader = DataLoaderFactory.create_loader(self.url, to_table_name(self.url), username)
+
+            # If a data loader is found, proceed with loading data
+            if data_loader:
+                if not db.data_exists_for_urls([self.url]):
+                    # Save 'Loading' status into the md_data_status table
+                    db.create_new_data_status(self.url, username, to_table_name(self.url))
+
+                    db.notify_data_load(self.url, username, to_table_name(self.url))
+            else:
+                # Raise an error if no data loader is found for the URL
+                raise DataLoaderError(f"No data loader was found for {self.url}")
+
     def fetch_data(self, username):
         """
         Fetches data for the URL if it doesn't already exist in the database.
