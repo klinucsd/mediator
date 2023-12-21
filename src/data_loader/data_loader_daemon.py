@@ -48,6 +48,7 @@ def load_data(url, username, table_name):
 
 
 async def handle_notifications():
+    conn = None
     try:
         conn = psycopg2.connect(
             host=f"{config('db_host')}",
