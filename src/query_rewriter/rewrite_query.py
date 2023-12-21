@@ -4,7 +4,6 @@
 # but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
 # So this code is needed to set the location of the Python code.
 import sys
-from threading import Thread
 
 from decouple import config, UndefinedValueError
 

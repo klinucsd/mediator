@@ -1,5 +1,3 @@
-import time
-
 from src.data_loader.data_loader import DataLoader
 from src.db.mediator_db import db
 
