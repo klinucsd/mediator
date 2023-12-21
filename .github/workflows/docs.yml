@@ -1,0 +1,33 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches:
+      - main  # Adjust this to the main branch of your repository
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8  # Adjust this to your Python version
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt  # Adjust this based on your project's dependencies
+
+    - name: Build Documentation
+      run: |
+        make docs  # Replace with the command to build your documentation
+
+    - name: Deploy Documentation
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ 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 }}
+        publish_dir: ./docs/_build/html  # Adjust this based on your documentation build output
