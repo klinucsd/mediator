@@ -15,6 +15,7 @@ except UndefinedValueError:
 # End of Setting
 # ------------------------------------------------------------------------------
 
+
 import asyncio
 import json
 import logging
@@ -30,13 +31,14 @@ from src.data_loader.data_loader_factory import DataLoaderFactory
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s.%(msecs)03d UTC [%(process)d] %(levelname)s Data Loader %(message)s',
+    format='%(asctime)s UTC [%(process)d] %(levelname)s Data Loader %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 
 def load_data(url, username, table_name):
     # Start a new process to load data
+    print('does it get to the data loader?')
     data_loader = DataLoaderFactory.create_loader(url, table_name, username)
 
     # If a data loader is found, proceed with loading data
@@ -50,6 +52,7 @@ def load_data(url, username, table_name):
 async def handle_notifications():
     conn = None
     try:
+        await asyncio.sleep(10)
         conn = psycopg2.connect(
             host=f"{config('db_host')}",
             dbname=f"{config('db_name')}",

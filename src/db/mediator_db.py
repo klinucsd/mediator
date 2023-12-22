@@ -40,6 +40,24 @@ class MediatorDatabase():
             port=config('db_port'),
         )
 
+    def get_conn_str(self):
+        """Build connection string for raster2pgsql calls"""
+        return f'postgresql://{config("db_user")}:{config("db_password")}@{config("db_host")}:{config("db_port")}/{config("db_name")}'
+    
+    def remove_data_status(self, url):
+        # Grab a connection from the pool and save data
+        with self.connection_pool.getconn() as connection:
+            with connection.cursor() as cursor:
+                # Define UPDATE SQL statement
+                delete_sql = f"delete from md_data_status WHERE url = '{url}';"
+
+                # Execute the SQL statement
+                cursor.execute(delete_sql)
+
+                # Commit the transaction
+                connection.commit()
+
+
     def data_exists_for_urls(self, urls):
         """
         Checks if data exists in the md_data_status table for the given list of URLs.
@@ -201,6 +219,8 @@ class MediatorDatabase():
                     'username': username,
                     'table_name': table_name
                 }
+
+                print('notification is happening')
                 cursor.execute(f"NOTIFY {config('data_load_notify_channel')}, "
                                f"'{json.dumps(message)}';")
 
