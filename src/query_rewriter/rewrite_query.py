@@ -7,6 +7,8 @@ import sys
 
 from decouple import config, UndefinedValueError
 
+from src.data_loader.data_loader import DataLoaderError
+
 try:
     sys.path.append(config('python_code_home'))
 except UndefinedValueError:
@@ -18,10 +20,6 @@ from src.db.mediator_db import db
 from src.query_parser.fetch_data_statement import FetchDataStatement
 from src.query_parser.mediator_query import MediatorQuery
 from src.query_parser.list_data_loaders_statement import ListDataLoadersStatement
-
-
-def thread_fetch_data(fetch_statement, username):
-    fetch_statement.fetch_data(username)
 
 
 def rewrite_query(username, query, in_transaction):
@@ -48,16 +46,15 @@ def rewrite_query(username, query, in_transaction):
         # Construct a FetchDataStatement
         fetch_data_statement = FetchDataStatement(md_query)
 
-        # Fetch data in a separate thread
-        # thread = Thread(target=thread_fetch_data, args=[fetch_data_statement, username])
-        # thread.start()
-        # thread.join()    # seem this is important, otherwise it won't work
-        # fetch_data_statement.fetch_data(username)
+        try:
+            # Send a notification to load data
+            fetch_data_statement.notify(username)
 
-        fetch_data_statement.notify(username)
-
-        # Modify the translated SQL to query the md_v_data_status table for the specific URL
-        translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{fetch_data_statement.url}'"
+            # Modify the translated SQL to query the md_v_data_status table for the specific URL
+            translated_sql = f"SELECT * FROM md_v_data_status WHERE url='{fetch_data_statement.url}'"
+        except DataLoaderError as e:
+            # Show the error message to the user
+            translated_sql = f"SELECT md_mediator_error('{str(e)}');"
 
     # Check if the query is "SELECT md_list_data_loaders()" statement
     elif ListDataLoadersStatement.validate(query):
