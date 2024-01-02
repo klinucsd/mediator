@@ -55,11 +55,10 @@ class FetchDataStatement():
 
             # If a data loader is found, proceed with loading data
             if data_loader:
-                if not db.data_exists_for_urls([self.url]):
-                    # Save 'Loading' status into the md_data_status table
-                    db.create_new_data_status(self.url, username, to_table_name(self.url))
+                # Save 'Loading' status into the md_data_status table
+                db.create_new_data_status(self.url, username, to_table_name(self.url))
 
-                    db.notify_data_load(self.url, username, to_table_name(self.url))
+                db.notify_data_load(self.url, username, to_table_name(self.url))
             else:
                 # Raise an error if no data loader is found for the URL
                 raise DataLoaderError(f"No data loader was found for {self.url}")

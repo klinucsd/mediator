@@ -4,7 +4,8 @@
 # but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
 # So this code is needed to set the location of the Python code.
 import sys
-from threading import Thread
+import traceback
+from multiprocessing import Process
 
 from decouple import config, UndefinedValueError
 
@@ -18,33 +19,37 @@ except UndefinedValueError:
 import asyncio
 import json
 import logging
-from threading import Thread
 
 import psycopg2
 
 # Configure logging
 from decouple import config
 
-from src.data_loader.data_loader import DataLoaderError
 from src.data_loader.data_loader_factory import DataLoaderFactory
+from src.db.mediator_db import db
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s.%(msecs)03d UTC [%(process)d] %(levelname)s Data Loader %(message)s',
+    format='%(asctime)s.%(msecs)03d UTC [%(process)d] %(levelname)s: Data Loader: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 
 def load_data(url, username, table_name):
-    # Start a new process to load data
-    data_loader = DataLoaderFactory.create_loader(url, table_name, username)
+    try:
+        # Start a new process to load data
+        data_loader = DataLoaderFactory.create_loader(url, table_name, username)
 
-    # If a data loader is found, proceed with loading data
-    if data_loader:
-        data_loader.load()
-    else:
-        # Raise an error if no data loader is found for the URL
-        raise DataLoaderError(f"No data loader was found for {url}")
+        # If a data loader is found, proceed with loading data
+        if data_loader:
+            data_loader.load()
+        else:
+            logging.error(f"No data loader was found.: {url}")
+            db.set_loading_error(url, f"No data loader was found.")
+    except Exception as e:
+        # traceback.print_exc()
+        logging.error(f"Encountered an error when loading {url}: {str(e)}.")
+        db.set_loading_error(url, f'Encountered an error: {str(e)}.')
 
 
 async def handle_notifications():
@@ -68,8 +73,11 @@ async def handle_notifications():
                     # Process notification payload
                     logging.info(f"Received notification: {notify.payload}")
                     payload = json.loads(notify.payload)
-                    thread = Thread(target=load_data, args=[payload['url'], payload['username'], payload['table_name']])
-                    thread.start()
+                    # Important Note: Don't use any shared connection pool inside the process
+                    # which may not be safe within multiple processes
+                    process = Process(target=load_data,
+                                      args=(payload['url'], payload['username'], payload['table_name']))
+                    process.start()
                 except Exception as e:
                     logging.error(f"Error processing notification: {e}")
             conn.notifies.clear()

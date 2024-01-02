@@ -27,9 +27,27 @@
                    pattern=".+" required>
 
 
+            <h2>Submodules</h2>
+            <ul>
+            </ul>
 
             <h2>API Documentation</h2>
                 <ul class="memberlist">
+            <li>
+                    <a class="variable" href="#DATA_LOAD_MAX_PROCESSES">DATA_LOAD_MAX_PROCESSES</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DATA_LOAD_FEATURES_PER_PROCESS">DATA_LOAD_FEATURES_PER_PROCESS</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DATA_LOAD_RETRIES_ON_ERROR">DATA_LOAD_RETRIES_ON_ERROR</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DATA_LOAD_INIT_FEATURES">DATA_LOAD_INIT_FEATURES</a>
+            </li>
+            <li>
+                    <a class="function" href="#load_features">load_features</a>
+            </li>
             <li>
                     <a class="class" href="#ArcGISFeatureServiceLoader">ArcGISFeatureServiceLoader</a>
                             <ul class="memberlist">
@@ -69,50 +87,287 @@
 
                         <label class="view-source-button" for="mod-arcgis_feature_service_loader-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">from</span> <span class="nn">src.data_loader.data_loader</span> <span class="kn">import</span> <span class="n">DataLoader</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">from</span> <span class="nn">src.db.mediator_db</span> <span class="kn">import</span> <span class="n">db</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="k">class</span> <span class="nc">ArcGISFeatureServiceLoader</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">):</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">        Parameters:</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">        - url (str): The URL to be validated.</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">        Returns:</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>        <span class="k">return</span> <span class="s2">&quot;FeatureServer&quot;</span> <span class="ow">in</span> <span class="n">url</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>        <span class="c1"># Load data to self.table_name</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">save_fake_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">)</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>        <span class="c1"># Update the status</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Event</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="kn">import</span> <span class="nn">geopandas</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="kn">import</span> <span class="nn">requests</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="kn">from</span> <span class="nn">arcgis.auth.api</span> <span class="kn">import</span> <span class="n">urllib3</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="kn">from</span> <span class="nn">arcgis.features</span> <span class="kn">import</span> <span class="n">FeatureLayer</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="kn">from</span> <span class="nn">decouple</span> <span class="kn">import</span> <span class="n">config</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span><span class="p">,</span> <span class="n">NullPool</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="kn">from</span> <span class="nn">src.data_loader.data_loader</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">DataLoaderError</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="n">DATA_LOAD_MAX_PROCESSES</span> <span class="o">=</span> <span class="n">config</span><span class="p">(</span><span class="s1">&#39;data_load_max_processes&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="n">DATA_LOAD_FEATURES_PER_PROCESS</span> <span class="o">=</span> <span class="n">config</span><span class="p">(</span><span class="s1">&#39;data_load_features_per_process&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="n">DATA_LOAD_RETRIES_ON_ERROR</span> <span class="o">=</span> <span class="n">config</span><span class="p">(</span><span class="s1">&#39;data_load_retries_on_error&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="n">DATA_LOAD_INIT_FEATURES</span> <span class="o">=</span> <span class="n">config</span><span class="p">(</span><span class="s1">&#39;data_load_init_features&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="k">def</span> <span class="nf">load_features</span><span class="p">(</span><span class="n">self_url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">wkid</span><span class="p">,</span> <span class="n">error_event</span><span class="p">):</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>    <span class="c1"># Set the number of retries in case of an error during loading</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>    <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>    <span class="c1"># Disable SSL warnings for this request</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>    <span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">(</span><span class="n">urllib3</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InsecureRequestWarning</span><span class="p">)</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>    <span class="c1"># Retry loading features in case of an error or no error</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>    <span class="k">while</span> <span class="n">tries</span> <span class="o">&lt;</span> <span class="n">DATA_LOAD_RETRIES_ON_ERROR</span><span class="p">:</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>            <span class="n">url_string</span> <span class="o">=</span> <span class="n">self_url</span> <span class="o">+</span> <span class="s2">&quot;/query?where=</span><span class="si">{}</span><span class="s2">&amp;returnGeometry=true&amp;outFields=</span><span class="si">{}</span><span class="s2">&amp;f=geojson&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_string</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>            <span class="n">gdf</span> <span class="o">=</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="o">.</span><span class="n">from_features</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;EPSG:</span><span class="si">{</span><span class="n">wkid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>            <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">is_valid</span><span class="p">,</span> <span class="p">:]</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>            <span class="c1"># Construct the PostgreSQL connection URL</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>            <span class="n">postgres_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;postgresql://</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_user&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_password&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_host&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_port&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>            <span class="c1"># Create the SQLAlchemy engine</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>            <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">poolclass</span><span class="o">=</span><span class="n">NullPool</span><span class="p">)</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>            <span class="c1"># Use the connection for GeoDataFrame.to_postgis</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>            <span class="n">gdf</span><span class="o">.</span><span class="n">to_postgis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;public&#39;</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">)</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>            <span class="c1"># Explicitly close the engine</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>            <span class="n">engine</span><span class="o">.</span><span class="n">dispose</span><span class="p">()</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>            <span class="c1"># Log the successful loading of features</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>            <span class="k">return</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>            <span class="c1"># Log the retry attempt in case of an error</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Try loading by query again: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tries</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>            <span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>    <span class="c1"># If all retries fail, set the error event and raise an exception</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>    <span class="n">error_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>    <span class="n">DataLoader</span><span class="o">.</span><span class="n">set_loading_error</span><span class="p">(</span><span class="n">self_url</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Failed loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="k">class</span> <span class="nc">ArcGISFeatureServiceLoader</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">):</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">        Parameters:</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">        - url (str): The URL to be validated.</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">        Returns:</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>            <span class="k">if</span> <span class="s2">&quot;/FeatureServer/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>                <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>                <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>                <span class="k">return</span> <span class="n">extent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>            <span class="k">else</span><span class="p">:</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>                <span class="k">return</span> <span class="kc">False</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>            <span class="k">return</span> <span class="kc">False</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>        <span class="c1"># Create a FeatureLayer by fetching its metadata</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>        <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>        <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extent: </span><span class="si">{</span><span class="n">extent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>        <span class="c1"># Get the spatial reference (projection) of the feature layer</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="n">wkid</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span><span class="o">.</span><span class="n">spatialReference</span><span class="o">.</span><span class="n">wkid</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Projection: </span><span class="si">{</span><span class="n">wkid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>        <span class="c1"># Gets the maximum record count of the layer</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>        <span class="n">max_record_count</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">maxRecordCount</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;maxRecordCount: </span><span class="si">{</span><span class="n">max_record_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>        <span class="c1"># Get objectIds of all the features</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="s2">&quot;1=1&quot;</span><span class="p">,</span> <span class="n">return_ids_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>        <span class="n">id_field_name</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIdFieldName&quot;</span><span class="p">]</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>        <span class="n">object_ids</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIds&quot;</span><span class="p">]</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>        <span class="n">object_ids</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>        <span class="n">total_record_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">object_ids</span><span class="p">)</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="n">total_record_count</span><span class="si">}</span><span class="s2"> objectIds&quot;</span><span class="p">)</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>        <span class="c1"># Create an event to signal an error by processes</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>        <span class="n">error_event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>        <span class="n">request_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>        <span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_record_count</span><span class="p">,</span> <span class="n">max_record_count</span><span class="p">):</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>            <span class="n">request_number</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>            <span class="c1"># Set up a where condition for this iteration</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>            <span class="n">to_rec</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="n">max_record_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>            <span class="k">if</span> <span class="n">to_rec</span> <span class="o">&gt;</span> <span class="n">total_record_count</span><span class="p">:</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>                <span class="n">to_rec</span> <span class="o">=</span> <span class="n">total_record_count</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>            <span class="n">from_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>            <span class="n">to_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">to_rec</span><span class="p">]</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>            <span class="n">where</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> &gt;= </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &lt;= </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">id_field_name</span><span class="p">,</span> <span class="n">from_id</span><span class="p">,</span> <span class="n">id_field_name</span><span class="p">,</span> <span class="n">to_id</span><span class="p">)</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>            <span class="c1"># Fork a new process to load the features specified by the where condition</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>            <span class="n">process</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">load_features</span><span class="p">,</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>                              <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">wkid</span><span class="p">,</span> <span class="n">error_event</span><span class="p">))</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>            <span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>            <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>            <span class="c1"># To be nice to the remote server and the mediator</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>            <span class="c1"># Start limited new processes to load data</span>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">==</span> <span class="n">DATA_LOAD_MAX_PROCESSES</span><span class="p">:</span>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>                <span class="c1"># wait and then continue</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>                <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>                    <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>                <span class="c1"># Clear the processes list</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>                <span class="n">processes</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>        <span class="c1"># Complete the left processes</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>            <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>                <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>        <span class="c1"># Check if an error occurred in any process</span>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>        <span class="k">if</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred in one of the processes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>            <span class="k">return</span>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed data loading: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>        <span class="c1"># Update the status</span>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>        <span class="n">DataLoader</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
             </section>
+                <section id="DATA_LOAD_MAX_PROCESSES">
+                    <div class="attr variable">
+            <span class="name">DATA_LOAD_MAX_PROCESSES</span>        =
+<span class="default_value">5</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DATA_LOAD_MAX_PROCESSES"></a>
+    
+    
+
+                </section>
+                <section id="DATA_LOAD_FEATURES_PER_PROCESS">
+                    <div class="attr variable">
+            <span class="name">DATA_LOAD_FEATURES_PER_PROCESS</span>        =
+<span class="default_value">1000</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DATA_LOAD_FEATURES_PER_PROCESS"></a>
+    
+    
+
+                </section>
+                <section id="DATA_LOAD_RETRIES_ON_ERROR">
+                    <div class="attr variable">
+            <span class="name">DATA_LOAD_RETRIES_ON_ERROR</span>        =
+<span class="default_value">3</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DATA_LOAD_RETRIES_ON_ERROR"></a>
+    
+    
+
+                </section>
+                <section id="DATA_LOAD_INIT_FEATURES">
+                    <div class="attr variable">
+            <span class="name">DATA_LOAD_INIT_FEATURES</span>        =
+<span class="default_value">300</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DATA_LOAD_INIT_FEATURES"></a>
+    
+    
+
+                </section>
+                <section id="load_features">
+                            <input id="load_features-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">load_features</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">self_url</span>, </span><span class="param"><span class="n">table_name</span>, </span><span class="param"><span class="n">where</span>, </span><span class="param"><span class="n">wkid</span>, </span><span class="param"><span class="n">error_event</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="load_features-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#load_features"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="load_features-20"><a href="#load_features-20"><span class="linenos">20</span></a><span class="k">def</span> <span class="nf">load_features</span><span class="p">(</span><span class="n">self_url</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">wkid</span><span class="p">,</span> <span class="n">error_event</span><span class="p">):</span>
+</span><span id="load_features-21"><a href="#load_features-21"><span class="linenos">21</span></a>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="load_features-22"><a href="#load_features-22"><span class="linenos">22</span></a>
+</span><span id="load_features-23"><a href="#load_features-23"><span class="linenos">23</span></a>    <span class="c1"># Set the number of retries in case of an error during loading</span>
+</span><span id="load_features-24"><a href="#load_features-24"><span class="linenos">24</span></a>    <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="load_features-25"><a href="#load_features-25"><span class="linenos">25</span></a>
+</span><span id="load_features-26"><a href="#load_features-26"><span class="linenos">26</span></a>    <span class="c1"># Disable SSL warnings for this request</span>
+</span><span id="load_features-27"><a href="#load_features-27"><span class="linenos">27</span></a>    <span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">(</span><span class="n">urllib3</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InsecureRequestWarning</span><span class="p">)</span>
+</span><span id="load_features-28"><a href="#load_features-28"><span class="linenos">28</span></a>
+</span><span id="load_features-29"><a href="#load_features-29"><span class="linenos">29</span></a>    <span class="c1"># Retry loading features in case of an error or no error</span>
+</span><span id="load_features-30"><a href="#load_features-30"><span class="linenos">30</span></a>    <span class="k">while</span> <span class="n">tries</span> <span class="o">&lt;</span> <span class="n">DATA_LOAD_RETRIES_ON_ERROR</span><span class="p">:</span>
+</span><span id="load_features-31"><a href="#load_features-31"><span class="linenos">31</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="load_features-32"><a href="#load_features-32"><span class="linenos">32</span></a>            <span class="n">url_string</span> <span class="o">=</span> <span class="n">self_url</span> <span class="o">+</span> <span class="s2">&quot;/query?where=</span><span class="si">{}</span><span class="s2">&amp;returnGeometry=true&amp;outFields=</span><span class="si">{}</span><span class="s2">&amp;f=geojson&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+</span><span id="load_features-33"><a href="#load_features-33"><span class="linenos">33</span></a>            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_string</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="load_features-34"><a href="#load_features-34"><span class="linenos">34</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</span><span id="load_features-35"><a href="#load_features-35"><span class="linenos">35</span></a>
+</span><span id="load_features-36"><a href="#load_features-36"><span class="linenos">36</span></a>            <span class="n">gdf</span> <span class="o">=</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="o">.</span><span class="n">from_features</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;EPSG:</span><span class="si">{</span><span class="n">wkid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="load_features-37"><a href="#load_features-37"><span class="linenos">37</span></a>            <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">is_valid</span><span class="p">,</span> <span class="p">:]</span>
+</span><span id="load_features-38"><a href="#load_features-38"><span class="linenos">38</span></a>
+</span><span id="load_features-39"><a href="#load_features-39"><span class="linenos">39</span></a>            <span class="c1"># Construct the PostgreSQL connection URL</span>
+</span><span id="load_features-40"><a href="#load_features-40"><span class="linenos">40</span></a>            <span class="n">postgres_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;postgresql://</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_user&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_password&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_host&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_port&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">config</span><span class="p">(</span><span class="s1">&#39;db_name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="load_features-41"><a href="#load_features-41"><span class="linenos">41</span></a>
+</span><span id="load_features-42"><a href="#load_features-42"><span class="linenos">42</span></a>            <span class="c1"># Create the SQLAlchemy engine</span>
+</span><span id="load_features-43"><a href="#load_features-43"><span class="linenos">43</span></a>            <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">postgres_url</span><span class="p">,</span> <span class="n">poolclass</span><span class="o">=</span><span class="n">NullPool</span><span class="p">)</span>
+</span><span id="load_features-44"><a href="#load_features-44"><span class="linenos">44</span></a>
+</span><span id="load_features-45"><a href="#load_features-45"><span class="linenos">45</span></a>            <span class="c1"># Use the connection for GeoDataFrame.to_postgis</span>
+</span><span id="load_features-46"><a href="#load_features-46"><span class="linenos">46</span></a>            <span class="n">gdf</span><span class="o">.</span><span class="n">to_postgis</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;public&#39;</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">)</span>
+</span><span id="load_features-47"><a href="#load_features-47"><span class="linenos">47</span></a>
+</span><span id="load_features-48"><a href="#load_features-48"><span class="linenos">48</span></a>            <span class="c1"># Explicitly close the engine</span>
+</span><span id="load_features-49"><a href="#load_features-49"><span class="linenos">49</span></a>            <span class="n">engine</span><span class="o">.</span><span class="n">dispose</span><span class="p">()</span>
+</span><span id="load_features-50"><a href="#load_features-50"><span class="linenos">50</span></a>
+</span><span id="load_features-51"><a href="#load_features-51"><span class="linenos">51</span></a>            <span class="c1"># Log the successful loading of features</span>
+</span><span id="load_features-52"><a href="#load_features-52"><span class="linenos">52</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="load_features-53"><a href="#load_features-53"><span class="linenos">53</span></a>            <span class="k">return</span>
+</span><span id="load_features-54"><a href="#load_features-54"><span class="linenos">54</span></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="load_features-55"><a href="#load_features-55"><span class="linenos">55</span></a>            <span class="c1"># Log the retry attempt in case of an error</span>
+</span><span id="load_features-56"><a href="#load_features-56"><span class="linenos">56</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Try loading by query again: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tries</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="load_features-57"><a href="#load_features-57"><span class="linenos">57</span></a>            <span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="load_features-58"><a href="#load_features-58"><span class="linenos">58</span></a>
+</span><span id="load_features-59"><a href="#load_features-59"><span class="linenos">59</span></a>    <span class="c1"># If all retries fail, set the error event and raise an exception</span>
+</span><span id="load_features-60"><a href="#load_features-60"><span class="linenos">60</span></a>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">self_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="load_features-61"><a href="#load_features-61"><span class="linenos">61</span></a>    <span class="n">error_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</span><span id="load_features-62"><a href="#load_features-62"><span class="linenos">62</span></a>    <span class="n">DataLoader</span><span class="o">.</span><span class="n">set_loading_error</span><span class="p">(</span><span class="n">self_url</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Failed loading by query: </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+
+
+    
+
+                </section>
                 <section id="ArcGISFeatureServiceLoader">
                             <input id="ArcGISFeatureServiceLoader-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr class">
@@ -124,42 +379,112 @@
 
     </div>
     <a class="headerlink" href="#ArcGISFeatureServiceLoader"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader-6"><a href="#ArcGISFeatureServiceLoader-6"><span class="linenos"> 6</span></a><span class="k">class</span> <span class="nc">ArcGISFeatureServiceLoader</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">):</span>
-</span><span id="ArcGISFeatureServiceLoader-7"><a href="#ArcGISFeatureServiceLoader-7"><span class="linenos"> 7</span></a>
-</span><span id="ArcGISFeatureServiceLoader-8"><a href="#ArcGISFeatureServiceLoader-8"><span class="linenos"> 8</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader-9"><a href="#ArcGISFeatureServiceLoader-9"><span class="linenos"> 9</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="ArcGISFeatureServiceLoader-10"><a href="#ArcGISFeatureServiceLoader-10"><span class="linenos">10</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
-</span><span id="ArcGISFeatureServiceLoader-11"><a href="#ArcGISFeatureServiceLoader-11"><span class="linenos">11</span></a>
-</span><span id="ArcGISFeatureServiceLoader-12"><a href="#ArcGISFeatureServiceLoader-12"><span class="linenos">12</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader-13"><a href="#ArcGISFeatureServiceLoader-13"><span class="linenos">13</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="ArcGISFeatureServiceLoader-14"><a href="#ArcGISFeatureServiceLoader-14"><span class="linenos">14</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
-</span><span id="ArcGISFeatureServiceLoader-15"><a href="#ArcGISFeatureServiceLoader-15"><span class="linenos">15</span></a>
-</span><span id="ArcGISFeatureServiceLoader-16"><a href="#ArcGISFeatureServiceLoader-16"><span class="linenos">16</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader-17"><a href="#ArcGISFeatureServiceLoader-17"><span class="linenos">17</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
-</span><span id="ArcGISFeatureServiceLoader-18"><a href="#ArcGISFeatureServiceLoader-18"><span class="linenos">18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader-19"><a href="#ArcGISFeatureServiceLoader-19"><span class="linenos">19</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
-</span><span id="ArcGISFeatureServiceLoader-20"><a href="#ArcGISFeatureServiceLoader-20"><span class="linenos">20</span></a>
-</span><span id="ArcGISFeatureServiceLoader-21"><a href="#ArcGISFeatureServiceLoader-21"><span class="linenos">21</span></a><span class="sd">        Parameters:</span>
-</span><span id="ArcGISFeatureServiceLoader-22"><a href="#ArcGISFeatureServiceLoader-22"><span class="linenos">22</span></a><span class="sd">        - url (str): The URL to be validated.</span>
-</span><span id="ArcGISFeatureServiceLoader-23"><a href="#ArcGISFeatureServiceLoader-23"><span class="linenos">23</span></a>
-</span><span id="ArcGISFeatureServiceLoader-24"><a href="#ArcGISFeatureServiceLoader-24"><span class="linenos">24</span></a><span class="sd">        Returns:</span>
-</span><span id="ArcGISFeatureServiceLoader-25"><a href="#ArcGISFeatureServiceLoader-25"><span class="linenos">25</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
-</span><span id="ArcGISFeatureServiceLoader-26"><a href="#ArcGISFeatureServiceLoader-26"><span class="linenos">26</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader-27"><a href="#ArcGISFeatureServiceLoader-27"><span class="linenos">27</span></a>        <span class="k">return</span> <span class="s2">&quot;FeatureServer&quot;</span> <span class="ow">in</span> <span class="n">url</span>
-</span><span id="ArcGISFeatureServiceLoader-28"><a href="#ArcGISFeatureServiceLoader-28"><span class="linenos">28</span></a>
-</span><span id="ArcGISFeatureServiceLoader-29"><a href="#ArcGISFeatureServiceLoader-29"><span class="linenos">29</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="ArcGISFeatureServiceLoader-30"><a href="#ArcGISFeatureServiceLoader-30"><span class="linenos">30</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader-31"><a href="#ArcGISFeatureServiceLoader-31"><span class="linenos">31</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
-</span><span id="ArcGISFeatureServiceLoader-32"><a href="#ArcGISFeatureServiceLoader-32"><span class="linenos">32</span></a>
-</span><span id="ArcGISFeatureServiceLoader-33"><a href="#ArcGISFeatureServiceLoader-33"><span class="linenos">33</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
-</span><span id="ArcGISFeatureServiceLoader-34"><a href="#ArcGISFeatureServiceLoader-34"><span class="linenos">34</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
-</span><span id="ArcGISFeatureServiceLoader-35"><a href="#ArcGISFeatureServiceLoader-35"><span class="linenos">35</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader-36"><a href="#ArcGISFeatureServiceLoader-36"><span class="linenos">36</span></a>
-</span><span id="ArcGISFeatureServiceLoader-37"><a href="#ArcGISFeatureServiceLoader-37"><span class="linenos">37</span></a>        <span class="c1"># Load data to self.table_name</span>
-</span><span id="ArcGISFeatureServiceLoader-38"><a href="#ArcGISFeatureServiceLoader-38"><span class="linenos">38</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">save_fake_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">)</span>
-</span><span id="ArcGISFeatureServiceLoader-39"><a href="#ArcGISFeatureServiceLoader-39"><span class="linenos">39</span></a>
-</span><span id="ArcGISFeatureServiceLoader-40"><a href="#ArcGISFeatureServiceLoader-40"><span class="linenos">40</span></a>        <span class="c1"># Update the status</span>
-</span><span id="ArcGISFeatureServiceLoader-41"><a href="#ArcGISFeatureServiceLoader-41"><span class="linenos">41</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader-65"><a href="#ArcGISFeatureServiceLoader-65"><span class="linenos"> 65</span></a><span class="k">class</span> <span class="nc">ArcGISFeatureServiceLoader</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader-66"><a href="#ArcGISFeatureServiceLoader-66"><span class="linenos"> 66</span></a>
+</span><span id="ArcGISFeatureServiceLoader-67"><a href="#ArcGISFeatureServiceLoader-67"><span class="linenos"> 67</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader-68"><a href="#ArcGISFeatureServiceLoader-68"><span class="linenos"> 68</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-69"><a href="#ArcGISFeatureServiceLoader-69"><span class="linenos"> 69</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+</span><span id="ArcGISFeatureServiceLoader-70"><a href="#ArcGISFeatureServiceLoader-70"><span class="linenos"> 70</span></a>
+</span><span id="ArcGISFeatureServiceLoader-71"><a href="#ArcGISFeatureServiceLoader-71"><span class="linenos"> 71</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader-72"><a href="#ArcGISFeatureServiceLoader-72"><span class="linenos"> 72</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-73"><a href="#ArcGISFeatureServiceLoader-73"><span class="linenos"> 73</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+</span><span id="ArcGISFeatureServiceLoader-74"><a href="#ArcGISFeatureServiceLoader-74"><span class="linenos"> 74</span></a>
+</span><span id="ArcGISFeatureServiceLoader-75"><a href="#ArcGISFeatureServiceLoader-75"><span class="linenos"> 75</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader-76"><a href="#ArcGISFeatureServiceLoader-76"><span class="linenos"> 76</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader-77"><a href="#ArcGISFeatureServiceLoader-77"><span class="linenos"> 77</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader-78"><a href="#ArcGISFeatureServiceLoader-78"><span class="linenos"> 78</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
+</span><span id="ArcGISFeatureServiceLoader-79"><a href="#ArcGISFeatureServiceLoader-79"><span class="linenos"> 79</span></a>
+</span><span id="ArcGISFeatureServiceLoader-80"><a href="#ArcGISFeatureServiceLoader-80"><span class="linenos"> 80</span></a><span class="sd">        Parameters:</span>
+</span><span id="ArcGISFeatureServiceLoader-81"><a href="#ArcGISFeatureServiceLoader-81"><span class="linenos"> 81</span></a><span class="sd">        - url (str): The URL to be validated.</span>
+</span><span id="ArcGISFeatureServiceLoader-82"><a href="#ArcGISFeatureServiceLoader-82"><span class="linenos"> 82</span></a>
+</span><span id="ArcGISFeatureServiceLoader-83"><a href="#ArcGISFeatureServiceLoader-83"><span class="linenos"> 83</span></a><span class="sd">        Returns:</span>
+</span><span id="ArcGISFeatureServiceLoader-84"><a href="#ArcGISFeatureServiceLoader-84"><span class="linenos"> 84</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
+</span><span id="ArcGISFeatureServiceLoader-85"><a href="#ArcGISFeatureServiceLoader-85"><span class="linenos"> 85</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader-86"><a href="#ArcGISFeatureServiceLoader-86"><span class="linenos"> 86</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-87"><a href="#ArcGISFeatureServiceLoader-87"><span class="linenos"> 87</span></a>            <span class="k">if</span> <span class="s2">&quot;/FeatureServer/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-88"><a href="#ArcGISFeatureServiceLoader-88"><span class="linenos"> 88</span></a>                <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-89"><a href="#ArcGISFeatureServiceLoader-89"><span class="linenos"> 89</span></a>                <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="ArcGISFeatureServiceLoader-90"><a href="#ArcGISFeatureServiceLoader-90"><span class="linenos"> 90</span></a>                <span class="k">return</span> <span class="n">extent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="ArcGISFeatureServiceLoader-91"><a href="#ArcGISFeatureServiceLoader-91"><span class="linenos"> 91</span></a>            <span class="k">else</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-92"><a href="#ArcGISFeatureServiceLoader-92"><span class="linenos"> 92</span></a>                <span class="k">return</span> <span class="kc">False</span>
+</span><span id="ArcGISFeatureServiceLoader-93"><a href="#ArcGISFeatureServiceLoader-93"><span class="linenos"> 93</span></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-94"><a href="#ArcGISFeatureServiceLoader-94"><span class="linenos"> 94</span></a>            <span class="k">return</span> <span class="kc">False</span>
+</span><span id="ArcGISFeatureServiceLoader-95"><a href="#ArcGISFeatureServiceLoader-95"><span class="linenos"> 95</span></a>
+</span><span id="ArcGISFeatureServiceLoader-96"><a href="#ArcGISFeatureServiceLoader-96"><span class="linenos"> 96</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader-97"><a href="#ArcGISFeatureServiceLoader-97"><span class="linenos"> 97</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader-98"><a href="#ArcGISFeatureServiceLoader-98"><span class="linenos"> 98</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
+</span><span id="ArcGISFeatureServiceLoader-99"><a href="#ArcGISFeatureServiceLoader-99"><span class="linenos"> 99</span></a>
+</span><span id="ArcGISFeatureServiceLoader-100"><a href="#ArcGISFeatureServiceLoader-100"><span class="linenos">100</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
+</span><span id="ArcGISFeatureServiceLoader-101"><a href="#ArcGISFeatureServiceLoader-101"><span class="linenos">101</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
+</span><span id="ArcGISFeatureServiceLoader-102"><a href="#ArcGISFeatureServiceLoader-102"><span class="linenos">102</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader-103"><a href="#ArcGISFeatureServiceLoader-103"><span class="linenos">103</span></a>        <span class="c1"># Create a FeatureLayer by fetching its metadata</span>
+</span><span id="ArcGISFeatureServiceLoader-104"><a href="#ArcGISFeatureServiceLoader-104"><span class="linenos">104</span></a>        <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-105"><a href="#ArcGISFeatureServiceLoader-105"><span class="linenos">105</span></a>        <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="ArcGISFeatureServiceLoader-106"><a href="#ArcGISFeatureServiceLoader-106"><span class="linenos">106</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extent: </span><span class="si">{</span><span class="n">extent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-107"><a href="#ArcGISFeatureServiceLoader-107"><span class="linenos">107</span></a>
+</span><span id="ArcGISFeatureServiceLoader-108"><a href="#ArcGISFeatureServiceLoader-108"><span class="linenos">108</span></a>        <span class="c1"># Get the spatial reference (projection) of the feature layer</span>
+</span><span id="ArcGISFeatureServiceLoader-109"><a href="#ArcGISFeatureServiceLoader-109"><span class="linenos">109</span></a>        <span class="n">wkid</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span><span class="o">.</span><span class="n">spatialReference</span><span class="o">.</span><span class="n">wkid</span>
+</span><span id="ArcGISFeatureServiceLoader-110"><a href="#ArcGISFeatureServiceLoader-110"><span class="linenos">110</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Projection: </span><span class="si">{</span><span class="n">wkid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-111"><a href="#ArcGISFeatureServiceLoader-111"><span class="linenos">111</span></a>
+</span><span id="ArcGISFeatureServiceLoader-112"><a href="#ArcGISFeatureServiceLoader-112"><span class="linenos">112</span></a>        <span class="c1"># Gets the maximum record count of the layer</span>
+</span><span id="ArcGISFeatureServiceLoader-113"><a href="#ArcGISFeatureServiceLoader-113"><span class="linenos">113</span></a>        <span class="n">max_record_count</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">maxRecordCount</span>
+</span><span id="ArcGISFeatureServiceLoader-114"><a href="#ArcGISFeatureServiceLoader-114"><span class="linenos">114</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;maxRecordCount: </span><span class="si">{</span><span class="n">max_record_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-115"><a href="#ArcGISFeatureServiceLoader-115"><span class="linenos">115</span></a>
+</span><span id="ArcGISFeatureServiceLoader-116"><a href="#ArcGISFeatureServiceLoader-116"><span class="linenos">116</span></a>        <span class="c1"># Get objectIds of all the features</span>
+</span><span id="ArcGISFeatureServiceLoader-117"><a href="#ArcGISFeatureServiceLoader-117"><span class="linenos">117</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="s2">&quot;1=1&quot;</span><span class="p">,</span> <span class="n">return_ids_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-118"><a href="#ArcGISFeatureServiceLoader-118"><span class="linenos">118</span></a>        <span class="n">id_field_name</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIdFieldName&quot;</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader-119"><a href="#ArcGISFeatureServiceLoader-119"><span class="linenos">119</span></a>        <span class="n">object_ids</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIds&quot;</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader-120"><a href="#ArcGISFeatureServiceLoader-120"><span class="linenos">120</span></a>        <span class="n">object_ids</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-121"><a href="#ArcGISFeatureServiceLoader-121"><span class="linenos">121</span></a>        <span class="n">total_record_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">object_ids</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-122"><a href="#ArcGISFeatureServiceLoader-122"><span class="linenos">122</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="n">total_record_count</span><span class="si">}</span><span class="s2"> objectIds&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-123"><a href="#ArcGISFeatureServiceLoader-123"><span class="linenos">123</span></a>
+</span><span id="ArcGISFeatureServiceLoader-124"><a href="#ArcGISFeatureServiceLoader-124"><span class="linenos">124</span></a>        <span class="c1"># Create an event to signal an error by processes</span>
+</span><span id="ArcGISFeatureServiceLoader-125"><a href="#ArcGISFeatureServiceLoader-125"><span class="linenos">125</span></a>        <span class="n">error_event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-126"><a href="#ArcGISFeatureServiceLoader-126"><span class="linenos">126</span></a>
+</span><span id="ArcGISFeatureServiceLoader-127"><a href="#ArcGISFeatureServiceLoader-127"><span class="linenos">127</span></a>        <span class="n">request_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span id="ArcGISFeatureServiceLoader-128"><a href="#ArcGISFeatureServiceLoader-128"><span class="linenos">128</span></a>        <span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="ArcGISFeatureServiceLoader-129"><a href="#ArcGISFeatureServiceLoader-129"><span class="linenos">129</span></a>
+</span><span id="ArcGISFeatureServiceLoader-130"><a href="#ArcGISFeatureServiceLoader-130"><span class="linenos">130</span></a>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_record_count</span><span class="p">,</span> <span class="n">max_record_count</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader-131"><a href="#ArcGISFeatureServiceLoader-131"><span class="linenos">131</span></a>            <span class="n">request_number</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="ArcGISFeatureServiceLoader-132"><a href="#ArcGISFeatureServiceLoader-132"><span class="linenos">132</span></a>
+</span><span id="ArcGISFeatureServiceLoader-133"><a href="#ArcGISFeatureServiceLoader-133"><span class="linenos">133</span></a>            <span class="c1"># Set up a where condition for this iteration</span>
+</span><span id="ArcGISFeatureServiceLoader-134"><a href="#ArcGISFeatureServiceLoader-134"><span class="linenos">134</span></a>            <span class="n">to_rec</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="n">max_record_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-135"><a href="#ArcGISFeatureServiceLoader-135"><span class="linenos">135</span></a>            <span class="k">if</span> <span class="n">to_rec</span> <span class="o">&gt;</span> <span class="n">total_record_count</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-136"><a href="#ArcGISFeatureServiceLoader-136"><span class="linenos">136</span></a>                <span class="n">to_rec</span> <span class="o">=</span> <span class="n">total_record_count</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span id="ArcGISFeatureServiceLoader-137"><a href="#ArcGISFeatureServiceLoader-137"><span class="linenos">137</span></a>            <span class="n">from_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader-138"><a href="#ArcGISFeatureServiceLoader-138"><span class="linenos">138</span></a>            <span class="n">to_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">to_rec</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader-139"><a href="#ArcGISFeatureServiceLoader-139"><span class="linenos">139</span></a>            <span class="n">where</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> &gt;= </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &lt;= </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">id_field_name</span><span class="p">,</span> <span class="n">from_id</span><span class="p">,</span> <span class="n">id_field_name</span><span class="p">,</span> <span class="n">to_id</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-140"><a href="#ArcGISFeatureServiceLoader-140"><span class="linenos">140</span></a>
+</span><span id="ArcGISFeatureServiceLoader-141"><a href="#ArcGISFeatureServiceLoader-141"><span class="linenos">141</span></a>            <span class="c1"># Fork a new process to load the features specified by the where condition</span>
+</span><span id="ArcGISFeatureServiceLoader-142"><a href="#ArcGISFeatureServiceLoader-142"><span class="linenos">142</span></a>            <span class="n">process</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">load_features</span><span class="p">,</span>
+</span><span id="ArcGISFeatureServiceLoader-143"><a href="#ArcGISFeatureServiceLoader-143"><span class="linenos">143</span></a>                              <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">wkid</span><span class="p">,</span> <span class="n">error_event</span><span class="p">))</span>
+</span><span id="ArcGISFeatureServiceLoader-144"><a href="#ArcGISFeatureServiceLoader-144"><span class="linenos">144</span></a>            <span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-145"><a href="#ArcGISFeatureServiceLoader-145"><span class="linenos">145</span></a>            <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-146"><a href="#ArcGISFeatureServiceLoader-146"><span class="linenos">146</span></a>
+</span><span id="ArcGISFeatureServiceLoader-147"><a href="#ArcGISFeatureServiceLoader-147"><span class="linenos">147</span></a>            <span class="c1"># To be nice to the remote server and the mediator</span>
+</span><span id="ArcGISFeatureServiceLoader-148"><a href="#ArcGISFeatureServiceLoader-148"><span class="linenos">148</span></a>            <span class="c1"># Start limited new processes to load data</span>
+</span><span id="ArcGISFeatureServiceLoader-149"><a href="#ArcGISFeatureServiceLoader-149"><span class="linenos">149</span></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">==</span> <span class="n">DATA_LOAD_MAX_PROCESSES</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-150"><a href="#ArcGISFeatureServiceLoader-150"><span class="linenos">150</span></a>                <span class="c1"># wait and then continue</span>
+</span><span id="ArcGISFeatureServiceLoader-151"><a href="#ArcGISFeatureServiceLoader-151"><span class="linenos">151</span></a>                <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-152"><a href="#ArcGISFeatureServiceLoader-152"><span class="linenos">152</span></a>                    <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-153"><a href="#ArcGISFeatureServiceLoader-153"><span class="linenos">153</span></a>
+</span><span id="ArcGISFeatureServiceLoader-154"><a href="#ArcGISFeatureServiceLoader-154"><span class="linenos">154</span></a>                <span class="c1"># Clear the processes list</span>
+</span><span id="ArcGISFeatureServiceLoader-155"><a href="#ArcGISFeatureServiceLoader-155"><span class="linenos">155</span></a>                <span class="n">processes</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-156"><a href="#ArcGISFeatureServiceLoader-156"><span class="linenos">156</span></a>
+</span><span id="ArcGISFeatureServiceLoader-157"><a href="#ArcGISFeatureServiceLoader-157"><span class="linenos">157</span></a>        <span class="c1"># Complete the left processes</span>
+</span><span id="ArcGISFeatureServiceLoader-158"><a href="#ArcGISFeatureServiceLoader-158"><span class="linenos">158</span></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="ArcGISFeatureServiceLoader-159"><a href="#ArcGISFeatureServiceLoader-159"><span class="linenos">159</span></a>            <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader-160"><a href="#ArcGISFeatureServiceLoader-160"><span class="linenos">160</span></a>                <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader-161"><a href="#ArcGISFeatureServiceLoader-161"><span class="linenos">161</span></a>
+</span><span id="ArcGISFeatureServiceLoader-162"><a href="#ArcGISFeatureServiceLoader-162"><span class="linenos">162</span></a>        <span class="c1"># Check if an error occurred in any process</span>
+</span><span id="ArcGISFeatureServiceLoader-163"><a href="#ArcGISFeatureServiceLoader-163"><span class="linenos">163</span></a>        <span class="k">if</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="ArcGISFeatureServiceLoader-164"><a href="#ArcGISFeatureServiceLoader-164"><span class="linenos">164</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred in one of the processes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-165"><a href="#ArcGISFeatureServiceLoader-165"><span class="linenos">165</span></a>            <span class="k">return</span>
+</span><span id="ArcGISFeatureServiceLoader-166"><a href="#ArcGISFeatureServiceLoader-166"><span class="linenos">166</span></a>
+</span><span id="ArcGISFeatureServiceLoader-167"><a href="#ArcGISFeatureServiceLoader-167"><span class="linenos">167</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed data loading: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader-168"><a href="#ArcGISFeatureServiceLoader-168"><span class="linenos">168</span></a>
+</span><span id="ArcGISFeatureServiceLoader-169"><a href="#ArcGISFeatureServiceLoader-169"><span class="linenos">169</span></a>        <span class="c1"># Update the status</span>
+</span><span id="ArcGISFeatureServiceLoader-170"><a href="#ArcGISFeatureServiceLoader-170"><span class="linenos">170</span></a>        <span class="n">DataLoader</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -180,9 +505,9 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#ArcGISFeatureServiceLoader.get_name"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.get_name-8"><a href="#ArcGISFeatureServiceLoader.get_name-8"><span class="linenos"> 8</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader.get_name-9"><a href="#ArcGISFeatureServiceLoader.get_name-9"><span class="linenos"> 9</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="ArcGISFeatureServiceLoader.get_name-10"><a href="#ArcGISFeatureServiceLoader.get_name-10"><span class="linenos">10</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.get_name-67"><a href="#ArcGISFeatureServiceLoader.get_name-67"><span class="linenos">67</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader.get_name-68"><a href="#ArcGISFeatureServiceLoader.get_name-68"><span class="linenos">68</span></a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.get_name-69"><a href="#ArcGISFeatureServiceLoader.get_name-69"><span class="linenos">69</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
 </span></pre></div>
 
 
@@ -206,9 +531,9 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#ArcGISFeatureServiceLoader.get_description"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.get_description-12"><a href="#ArcGISFeatureServiceLoader.get_description-12"><span class="linenos">12</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader.get_description-13"><a href="#ArcGISFeatureServiceLoader.get_description-13"><span class="linenos">13</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="ArcGISFeatureServiceLoader.get_description-14"><a href="#ArcGISFeatureServiceLoader.get_description-14"><span class="linenos">14</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.get_description-71"><a href="#ArcGISFeatureServiceLoader.get_description-71"><span class="linenos">71</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader.get_description-72"><a href="#ArcGISFeatureServiceLoader.get_description-72"><span class="linenos">72</span></a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.get_description-73"><a href="#ArcGISFeatureServiceLoader.get_description-73"><span class="linenos">73</span></a>        <span class="k">return</span> <span class="s1">&#39;ArcGIS Feature Service Loader&#39;</span>
 </span></pre></div>
 
 
@@ -232,18 +557,26 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#ArcGISFeatureServiceLoader.validate"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.validate-16"><a href="#ArcGISFeatureServiceLoader.validate-16"><span class="linenos">16</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-17"><a href="#ArcGISFeatureServiceLoader.validate-17"><span class="linenos">17</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-18"><a href="#ArcGISFeatureServiceLoader.validate-18"><span class="linenos">18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-19"><a href="#ArcGISFeatureServiceLoader.validate-19"><span class="linenos">19</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-20"><a href="#ArcGISFeatureServiceLoader.validate-20"><span class="linenos">20</span></a>
-</span><span id="ArcGISFeatureServiceLoader.validate-21"><a href="#ArcGISFeatureServiceLoader.validate-21"><span class="linenos">21</span></a><span class="sd">        Parameters:</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-22"><a href="#ArcGISFeatureServiceLoader.validate-22"><span class="linenos">22</span></a><span class="sd">        - url (str): The URL to be validated.</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-23"><a href="#ArcGISFeatureServiceLoader.validate-23"><span class="linenos">23</span></a>
-</span><span id="ArcGISFeatureServiceLoader.validate-24"><a href="#ArcGISFeatureServiceLoader.validate-24"><span class="linenos">24</span></a><span class="sd">        Returns:</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-25"><a href="#ArcGISFeatureServiceLoader.validate-25"><span class="linenos">25</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-26"><a href="#ArcGISFeatureServiceLoader.validate-26"><span class="linenos">26</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader.validate-27"><a href="#ArcGISFeatureServiceLoader.validate-27"><span class="linenos">27</span></a>        <span class="k">return</span> <span class="s2">&quot;FeatureServer&quot;</span> <span class="ow">in</span> <span class="n">url</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.validate-75"><a href="#ArcGISFeatureServiceLoader.validate-75"><span class="linenos">75</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-76"><a href="#ArcGISFeatureServiceLoader.validate-76"><span class="linenos">76</span></a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-77"><a href="#ArcGISFeatureServiceLoader.validate-77"><span class="linenos">77</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-78"><a href="#ArcGISFeatureServiceLoader.validate-78"><span class="linenos">78</span></a><span class="sd">        Check if this data loader is able to process the data at the URL.</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-79"><a href="#ArcGISFeatureServiceLoader.validate-79"><span class="linenos">79</span></a>
+</span><span id="ArcGISFeatureServiceLoader.validate-80"><a href="#ArcGISFeatureServiceLoader.validate-80"><span class="linenos">80</span></a><span class="sd">        Parameters:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-81"><a href="#ArcGISFeatureServiceLoader.validate-81"><span class="linenos">81</span></a><span class="sd">        - url (str): The URL to be validated.</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-82"><a href="#ArcGISFeatureServiceLoader.validate-82"><span class="linenos">82</span></a>
+</span><span id="ArcGISFeatureServiceLoader.validate-83"><a href="#ArcGISFeatureServiceLoader.validate-83"><span class="linenos">83</span></a><span class="sd">        Returns:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-84"><a href="#ArcGISFeatureServiceLoader.validate-84"><span class="linenos">84</span></a><span class="sd">        - bool: True if the loader can process the data, False otherwise.</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-85"><a href="#ArcGISFeatureServiceLoader.validate-85"><span class="linenos">85</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-86"><a href="#ArcGISFeatureServiceLoader.validate-86"><span class="linenos">86</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-87"><a href="#ArcGISFeatureServiceLoader.validate-87"><span class="linenos">87</span></a>            <span class="k">if</span> <span class="s2">&quot;/FeatureServer/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-88"><a href="#ArcGISFeatureServiceLoader.validate-88"><span class="linenos">88</span></a>                <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-89"><a href="#ArcGISFeatureServiceLoader.validate-89"><span class="linenos">89</span></a>                <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-90"><a href="#ArcGISFeatureServiceLoader.validate-90"><span class="linenos">90</span></a>                <span class="k">return</span> <span class="n">extent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-91"><a href="#ArcGISFeatureServiceLoader.validate-91"><span class="linenos">91</span></a>            <span class="k">else</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-92"><a href="#ArcGISFeatureServiceLoader.validate-92"><span class="linenos">92</span></a>                <span class="k">return</span> <span class="kc">False</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-93"><a href="#ArcGISFeatureServiceLoader.validate-93"><span class="linenos">93</span></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.validate-94"><a href="#ArcGISFeatureServiceLoader.validate-94"><span class="linenos">94</span></a>            <span class="k">return</span> <span class="kc">False</span>
 </span></pre></div>
 
 
@@ -275,19 +608,81 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#ArcGISFeatureServiceLoader.load"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.load-29"><a href="#ArcGISFeatureServiceLoader.load-29"><span class="linenos">29</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="ArcGISFeatureServiceLoader.load-30"><a href="#ArcGISFeatureServiceLoader.load-30"><span class="linenos">30</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader.load-31"><a href="#ArcGISFeatureServiceLoader.load-31"><span class="linenos">31</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
-</span><span id="ArcGISFeatureServiceLoader.load-32"><a href="#ArcGISFeatureServiceLoader.load-32"><span class="linenos">32</span></a>
-</span><span id="ArcGISFeatureServiceLoader.load-33"><a href="#ArcGISFeatureServiceLoader.load-33"><span class="linenos">33</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
-</span><span id="ArcGISFeatureServiceLoader.load-34"><a href="#ArcGISFeatureServiceLoader.load-34"><span class="linenos">34</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
-</span><span id="ArcGISFeatureServiceLoader.load-35"><a href="#ArcGISFeatureServiceLoader.load-35"><span class="linenos">35</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ArcGISFeatureServiceLoader.load-36"><a href="#ArcGISFeatureServiceLoader.load-36"><span class="linenos">36</span></a>
-</span><span id="ArcGISFeatureServiceLoader.load-37"><a href="#ArcGISFeatureServiceLoader.load-37"><span class="linenos">37</span></a>        <span class="c1"># Load data to self.table_name</span>
-</span><span id="ArcGISFeatureServiceLoader.load-38"><a href="#ArcGISFeatureServiceLoader.load-38"><span class="linenos">38</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">save_fake_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">)</span>
-</span><span id="ArcGISFeatureServiceLoader.load-39"><a href="#ArcGISFeatureServiceLoader.load-39"><span class="linenos">39</span></a>
-</span><span id="ArcGISFeatureServiceLoader.load-40"><a href="#ArcGISFeatureServiceLoader.load-40"><span class="linenos">40</span></a>        <span class="c1"># Update the status</span>
-</span><span id="ArcGISFeatureServiceLoader.load-41"><a href="#ArcGISFeatureServiceLoader.load-41"><span class="linenos">41</span></a>        <span class="n">db</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ArcGISFeatureServiceLoader.load-96"><a href="#ArcGISFeatureServiceLoader.load-96"><span class="linenos"> 96</span></a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader.load-97"><a href="#ArcGISFeatureServiceLoader.load-97"><span class="linenos"> 97</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader.load-98"><a href="#ArcGISFeatureServiceLoader.load-98"><span class="linenos"> 98</span></a><span class="sd">        Load features served by ArcGIS into the database and update the data status.</span>
+</span><span id="ArcGISFeatureServiceLoader.load-99"><a href="#ArcGISFeatureServiceLoader.load-99"><span class="linenos"> 99</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-100"><a href="#ArcGISFeatureServiceLoader.load-100"><span class="linenos">100</span></a><span class="sd">        This method loads data into the specified table and then updates the status</span>
+</span><span id="ArcGISFeatureServiceLoader.load-101"><a href="#ArcGISFeatureServiceLoader.load-101"><span class="linenos">101</span></a><span class="sd">        of the data associated with the URL to &#39;Saved&#39; in the mediator&#39;s data status table.</span>
+</span><span id="ArcGISFeatureServiceLoader.load-102"><a href="#ArcGISFeatureServiceLoader.load-102"><span class="linenos">102</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ArcGISFeatureServiceLoader.load-103"><a href="#ArcGISFeatureServiceLoader.load-103"><span class="linenos">103</span></a>        <span class="c1"># Create a FeatureLayer by fetching its metadata</span>
+</span><span id="ArcGISFeatureServiceLoader.load-104"><a href="#ArcGISFeatureServiceLoader.load-104"><span class="linenos">104</span></a>        <span class="n">layer</span> <span class="o">=</span> <span class="n">FeatureLayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-105"><a href="#ArcGISFeatureServiceLoader.load-105"><span class="linenos">105</span></a>        <span class="n">extent</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span>
+</span><span id="ArcGISFeatureServiceLoader.load-106"><a href="#ArcGISFeatureServiceLoader.load-106"><span class="linenos">106</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extent: </span><span class="si">{</span><span class="n">extent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-107"><a href="#ArcGISFeatureServiceLoader.load-107"><span class="linenos">107</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-108"><a href="#ArcGISFeatureServiceLoader.load-108"><span class="linenos">108</span></a>        <span class="c1"># Get the spatial reference (projection) of the feature layer</span>
+</span><span id="ArcGISFeatureServiceLoader.load-109"><a href="#ArcGISFeatureServiceLoader.load-109"><span class="linenos">109</span></a>        <span class="n">wkid</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">extent</span><span class="o">.</span><span class="n">spatialReference</span><span class="o">.</span><span class="n">wkid</span>
+</span><span id="ArcGISFeatureServiceLoader.load-110"><a href="#ArcGISFeatureServiceLoader.load-110"><span class="linenos">110</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Projection: </span><span class="si">{</span><span class="n">wkid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-111"><a href="#ArcGISFeatureServiceLoader.load-111"><span class="linenos">111</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-112"><a href="#ArcGISFeatureServiceLoader.load-112"><span class="linenos">112</span></a>        <span class="c1"># Gets the maximum record count of the layer</span>
+</span><span id="ArcGISFeatureServiceLoader.load-113"><a href="#ArcGISFeatureServiceLoader.load-113"><span class="linenos">113</span></a>        <span class="n">max_record_count</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">maxRecordCount</span>
+</span><span id="ArcGISFeatureServiceLoader.load-114"><a href="#ArcGISFeatureServiceLoader.load-114"><span class="linenos">114</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;maxRecordCount: </span><span class="si">{</span><span class="n">max_record_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-115"><a href="#ArcGISFeatureServiceLoader.load-115"><span class="linenos">115</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-116"><a href="#ArcGISFeatureServiceLoader.load-116"><span class="linenos">116</span></a>        <span class="c1"># Get objectIds of all the features</span>
+</span><span id="ArcGISFeatureServiceLoader.load-117"><a href="#ArcGISFeatureServiceLoader.load-117"><span class="linenos">117</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="s2">&quot;1=1&quot;</span><span class="p">,</span> <span class="n">return_ids_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-118"><a href="#ArcGISFeatureServiceLoader.load-118"><span class="linenos">118</span></a>        <span class="n">id_field_name</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIdFieldName&quot;</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader.load-119"><a href="#ArcGISFeatureServiceLoader.load-119"><span class="linenos">119</span></a>        <span class="n">object_ids</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;objectIds&quot;</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader.load-120"><a href="#ArcGISFeatureServiceLoader.load-120"><span class="linenos">120</span></a>        <span class="n">object_ids</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-121"><a href="#ArcGISFeatureServiceLoader.load-121"><span class="linenos">121</span></a>        <span class="n">total_record_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">object_ids</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-122"><a href="#ArcGISFeatureServiceLoader.load-122"><span class="linenos">122</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="n">total_record_count</span><span class="si">}</span><span class="s2"> objectIds&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-123"><a href="#ArcGISFeatureServiceLoader.load-123"><span class="linenos">123</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-124"><a href="#ArcGISFeatureServiceLoader.load-124"><span class="linenos">124</span></a>        <span class="c1"># Create an event to signal an error by processes</span>
+</span><span id="ArcGISFeatureServiceLoader.load-125"><a href="#ArcGISFeatureServiceLoader.load-125"><span class="linenos">125</span></a>        <span class="n">error_event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-126"><a href="#ArcGISFeatureServiceLoader.load-126"><span class="linenos">126</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-127"><a href="#ArcGISFeatureServiceLoader.load-127"><span class="linenos">127</span></a>        <span class="n">request_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span id="ArcGISFeatureServiceLoader.load-128"><a href="#ArcGISFeatureServiceLoader.load-128"><span class="linenos">128</span></a>        <span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="ArcGISFeatureServiceLoader.load-129"><a href="#ArcGISFeatureServiceLoader.load-129"><span class="linenos">129</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-130"><a href="#ArcGISFeatureServiceLoader.load-130"><span class="linenos">130</span></a>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_record_count</span><span class="p">,</span> <span class="n">max_record_count</span><span class="p">):</span>
+</span><span id="ArcGISFeatureServiceLoader.load-131"><a href="#ArcGISFeatureServiceLoader.load-131"><span class="linenos">131</span></a>            <span class="n">request_number</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="ArcGISFeatureServiceLoader.load-132"><a href="#ArcGISFeatureServiceLoader.load-132"><span class="linenos">132</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-133"><a href="#ArcGISFeatureServiceLoader.load-133"><span class="linenos">133</span></a>            <span class="c1"># Set up a where condition for this iteration</span>
+</span><span id="ArcGISFeatureServiceLoader.load-134"><a href="#ArcGISFeatureServiceLoader.load-134"><span class="linenos">134</span></a>            <span class="n">to_rec</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="n">max_record_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-135"><a href="#ArcGISFeatureServiceLoader.load-135"><span class="linenos">135</span></a>            <span class="k">if</span> <span class="n">to_rec</span> <span class="o">&gt;</span> <span class="n">total_record_count</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.load-136"><a href="#ArcGISFeatureServiceLoader.load-136"><span class="linenos">136</span></a>                <span class="n">to_rec</span> <span class="o">=</span> <span class="n">total_record_count</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span id="ArcGISFeatureServiceLoader.load-137"><a href="#ArcGISFeatureServiceLoader.load-137"><span class="linenos">137</span></a>            <span class="n">from_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader.load-138"><a href="#ArcGISFeatureServiceLoader.load-138"><span class="linenos">138</span></a>            <span class="n">to_id</span> <span class="o">=</span> <span class="n">object_ids</span><span class="p">[</span><span class="n">to_rec</span><span class="p">]</span>
+</span><span id="ArcGISFeatureServiceLoader.load-139"><a href="#ArcGISFeatureServiceLoader.load-139"><span class="linenos">139</span></a>            <span class="n">where</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> &gt;= </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &lt;= </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">id_field_name</span><span class="p">,</span> <span class="n">from_id</span><span class="p">,</span> <span class="n">id_field_name</span><span class="p">,</span> <span class="n">to_id</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-140"><a href="#ArcGISFeatureServiceLoader.load-140"><span class="linenos">140</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-141"><a href="#ArcGISFeatureServiceLoader.load-141"><span class="linenos">141</span></a>            <span class="c1"># Fork a new process to load the features specified by the where condition</span>
+</span><span id="ArcGISFeatureServiceLoader.load-142"><a href="#ArcGISFeatureServiceLoader.load-142"><span class="linenos">142</span></a>            <span class="n">process</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">load_features</span><span class="p">,</span>
+</span><span id="ArcGISFeatureServiceLoader.load-143"><a href="#ArcGISFeatureServiceLoader.load-143"><span class="linenos">143</span></a>                              <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">wkid</span><span class="p">,</span> <span class="n">error_event</span><span class="p">))</span>
+</span><span id="ArcGISFeatureServiceLoader.load-144"><a href="#ArcGISFeatureServiceLoader.load-144"><span class="linenos">144</span></a>            <span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-145"><a href="#ArcGISFeatureServiceLoader.load-145"><span class="linenos">145</span></a>            <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-146"><a href="#ArcGISFeatureServiceLoader.load-146"><span class="linenos">146</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-147"><a href="#ArcGISFeatureServiceLoader.load-147"><span class="linenos">147</span></a>            <span class="c1"># To be nice to the remote server and the mediator</span>
+</span><span id="ArcGISFeatureServiceLoader.load-148"><a href="#ArcGISFeatureServiceLoader.load-148"><span class="linenos">148</span></a>            <span class="c1"># Start limited new processes to load data</span>
+</span><span id="ArcGISFeatureServiceLoader.load-149"><a href="#ArcGISFeatureServiceLoader.load-149"><span class="linenos">149</span></a>            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">==</span> <span class="n">DATA_LOAD_MAX_PROCESSES</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.load-150"><a href="#ArcGISFeatureServiceLoader.load-150"><span class="linenos">150</span></a>                <span class="c1"># wait and then continue</span>
+</span><span id="ArcGISFeatureServiceLoader.load-151"><a href="#ArcGISFeatureServiceLoader.load-151"><span class="linenos">151</span></a>                <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.load-152"><a href="#ArcGISFeatureServiceLoader.load-152"><span class="linenos">152</span></a>                    <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-153"><a href="#ArcGISFeatureServiceLoader.load-153"><span class="linenos">153</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-154"><a href="#ArcGISFeatureServiceLoader.load-154"><span class="linenos">154</span></a>                <span class="c1"># Clear the processes list</span>
+</span><span id="ArcGISFeatureServiceLoader.load-155"><a href="#ArcGISFeatureServiceLoader.load-155"><span class="linenos">155</span></a>                <span class="n">processes</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-156"><a href="#ArcGISFeatureServiceLoader.load-156"><span class="linenos">156</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-157"><a href="#ArcGISFeatureServiceLoader.load-157"><span class="linenos">157</span></a>        <span class="c1"># Complete the left processes</span>
+</span><span id="ArcGISFeatureServiceLoader.load-158"><a href="#ArcGISFeatureServiceLoader.load-158"><span class="linenos">158</span></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="ArcGISFeatureServiceLoader.load-159"><a href="#ArcGISFeatureServiceLoader.load-159"><span class="linenos">159</span></a>            <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+</span><span id="ArcGISFeatureServiceLoader.load-160"><a href="#ArcGISFeatureServiceLoader.load-160"><span class="linenos">160</span></a>                <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="ArcGISFeatureServiceLoader.load-161"><a href="#ArcGISFeatureServiceLoader.load-161"><span class="linenos">161</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-162"><a href="#ArcGISFeatureServiceLoader.load-162"><span class="linenos">162</span></a>        <span class="c1"># Check if an error occurred in any process</span>
+</span><span id="ArcGISFeatureServiceLoader.load-163"><a href="#ArcGISFeatureServiceLoader.load-163"><span class="linenos">163</span></a>        <span class="k">if</span> <span class="n">error_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+</span><span id="ArcGISFeatureServiceLoader.load-164"><a href="#ArcGISFeatureServiceLoader.load-164"><span class="linenos">164</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred in one of the processes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-165"><a href="#ArcGISFeatureServiceLoader.load-165"><span class="linenos">165</span></a>            <span class="k">return</span>
+</span><span id="ArcGISFeatureServiceLoader.load-166"><a href="#ArcGISFeatureServiceLoader.load-166"><span class="linenos">166</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-167"><a href="#ArcGISFeatureServiceLoader.load-167"><span class="linenos">167</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed data loading: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="ArcGISFeatureServiceLoader.load-168"><a href="#ArcGISFeatureServiceLoader.load-168"><span class="linenos">168</span></a>
+</span><span id="ArcGISFeatureServiceLoader.load-169"><a href="#ArcGISFeatureServiceLoader.load-169"><span class="linenos">169</span></a>        <span class="c1"># Update the status</span>
+</span><span id="ArcGISFeatureServiceLoader.load-170"><a href="#ArcGISFeatureServiceLoader.load-170"><span class="linenos">170</span></a>        <span class="n">DataLoader</span><span class="o">.</span><span class="n">update_data_status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;Saved&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -307,6 +702,8 @@ of the data associated with the URL to 'Saved' in the mediator's data status tab
                 <dd id="ArcGISFeatureServiceLoader.url" class="variable"><a href="data_loader.html#DataLoader.url">url</a></dd>
                 <dd id="ArcGISFeatureServiceLoader.table_name" class="variable"><a href="data_loader.html#DataLoader.table_name">table_name</a></dd>
                 <dd id="ArcGISFeatureServiceLoader.username" class="variable"><a href="data_loader.html#DataLoader.username">username</a></dd>
+                <dd id="ArcGISFeatureServiceLoader.set_loading_error" class="function"><a href="data_loader.html#DataLoader.set_loading_error">set_loading_error</a></dd>
+                <dd id="ArcGISFeatureServiceLoader.update_data_status" class="function"><a href="data_loader.html#DataLoader.update_data_status">update_data_status</a></dd>
 
             </div>
                                 </dl>

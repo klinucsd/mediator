@@ -4,10 +4,9 @@
 # but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
 # So this code is needed to set the location of the Python code.
 import sys
+import traceback
 
 from decouple import config, UndefinedValueError
-
-from src.data_loader.data_loader import DataLoaderError
 
 try:
     sys.path.append(config('python_code_home'))
@@ -21,6 +20,7 @@ from src.query_parser.fetch_data_statement import FetchDataStatement
 from src.query_parser.mediator_query import MediatorQuery
 from src.query_parser.list_data_loaders_statement import ListDataLoadersStatement
 
+from src.data_loader.data_loader import DataLoaderError
 
 def rewrite_query(username, query, in_transaction):
     """
@@ -55,6 +55,9 @@ def rewrite_query(username, query, in_transaction):
         except DataLoaderError as e:
             # Show the error message to the user
             translated_sql = f"SELECT md_mediator_error('{str(e)}');"
+        except Exception as e:
+            traceback.print_exc()
+            translated_sql = f"SELECT md_mediator_error('Encountered an error when fetching the data');"
 
     # Check if the query is "SELECT md_list_data_loaders()" statement
     elif ListDataLoadersStatement.validate(query):

@@ -57,7 +57,8 @@ class MediatorDatabase():
         with self.connection_pool.getconn() as connection:
             with connection.cursor() as cursor:
                 # Create a parameterized query with an IN clause
-                query = sql.SQL("SELECT * FROM md_data_status WHERE url = ANY(%s)")
+                query = sql.SQL(
+                    "SELECT * FROM md_data_status WHERE url = ANY(%s) AND (status='Saved' OR status='Loading') ")
 
                 # Execute the prepared statement with the array as a parameter
                 cursor.execute(query, (urls,))
@@ -69,6 +70,10 @@ class MediatorDatabase():
                 for row in results:
                     exist = True
                     break
+
+                # Commit changes and close connections
+                connection.commit()
+                self.connection_pool.putconn(connection)
 
         return exist
 
@@ -107,6 +112,7 @@ class MediatorDatabase():
 
                 # Commit the transaction to persist the changes
                 connection.commit()
+                self.connection_pool.putconn(connection)
 
     def update_data_status(self, url, status):
         """
@@ -131,6 +137,32 @@ class MediatorDatabase():
 
                 # Commit the transaction
                 connection.commit()
+                self.connection_pool.putconn(connection)
+
+    def set_loading_error(self, url, error_message):
+        """
+        Set the status of a data entry in the md_data_status table to 'Error'.
+
+        Args:
+            url (str): The URL for which data status is being updated.
+            error_message (str): The error message.
+
+        Returns:
+            None
+        """
+
+        # Grab a connection from the pool and save data
+        with self.connection_pool.getconn() as connection:
+            with connection.cursor() as cursor:
+                # Define UPDATE SQL statement
+                update_sql = "UPDATE md_data_status SET status = 'Error', notes=%s, status_updated_time=now() WHERE url = %s AND status='Loading';"
+
+                # Execute the SQL statement
+                cursor.execute(update_sql, (error_message, url))
+
+                # Commit the transaction
+                connection.commit()
+                self.connection_pool.putconn(connection)
 
     def get_invalid_urls(self, urls):
         """
@@ -167,6 +199,11 @@ class MediatorDatabase():
 
                 # Fetch all the URLs with status not 'Saved'
                 invalid_tables = [row[0] for row in cursor.fetchall()]
+
+                # Commit changes and close connections
+                connection.commit()
+                self.connection_pool.putconn(connection)
+
                 return invalid_tables
 
         return url_tables
@@ -192,6 +229,10 @@ class MediatorDatabase():
                 # Execute the statement
                 cursor.execute(query, (urls,))
 
+                # Commit changes and close connections
+                connection.commit()
+                self.connection_pool.putconn(connection)
+
     def notify_data_load(self, url, username, table_name):
         with self.connection_pool.getconn() as connection:
             connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
@@ -203,6 +244,10 @@ class MediatorDatabase():
                 }
                 cursor.execute(f"NOTIFY {config('data_load_notify_channel')}, "
                                f"'{json.dumps(message)}';")
+
+                # Commit changes and close connections
+                connection.commit()
+                self.connection_pool.putconn(connection)
 
     def save_fake_data(self, table_name):
         """
@@ -250,6 +295,7 @@ class MediatorDatabase():
 
                 # Commit changes and close connections
                 connection.commit()
+                self.connection_pool.putconn(connection)
 
 
 db = MediatorDatabase()
