@@ -205,6 +205,8 @@ class WFSLoader(DataLoader):
                 # Check if the layer with the typename exists
                 # MapServer WFS may not have a name space with a layer
                 return typename in layers or typename.split(':')[-1] in layers
+            else:
+                return False
         except requests.exceptions.HTTPError as e:
             return False
 

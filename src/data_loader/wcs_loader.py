@@ -41,6 +41,8 @@ class WCSLoader(DataLoader):
                 wcs = WebCoverageService(url, "2.0.1")
                 layers = wcs.contents.keys()
                 return coverage_id in layers or coverage_id.split(':')[-1] in layers
+            else:
+                return False
         except requests.exceptions.HTTPError:
             return False
 
