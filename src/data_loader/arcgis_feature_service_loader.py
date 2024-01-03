@@ -1,7 +1,10 @@
 import logging
+import multiprocessing
 from multiprocessing import Process, Event
 
 import geopandas
+import numpy
+import pandas
 import requests
 from arcgis.auth.api import urllib3
 from arcgis.features import FeatureLayer
@@ -16,7 +19,7 @@ DATA_LOAD_RETRIES_ON_ERROR = config('data_load_retries_on_error', cast=int)
 DATA_LOAD_INIT_FEATURES = config('data_load_init_features', cast=int)
 
 
-def load_features(self_url, table_name, where, wkid, error_event):
+def load_features(self_url, table_name, where, wkid, error_event, return_dict):
     logging.info(f"Loading by query: {where}: {self_url}")
 
     # Set the number of retries in case of an error during loading
@@ -34,18 +37,7 @@ def load_features(self_url, table_name, where, wkid, error_event):
 
             gdf = geopandas.GeoDataFrame.from_features(data['features'], crs=f'EPSG:{wkid}')
             gdf = gdf.loc[gdf['geometry'].is_valid, :]
-
-            # Construct the PostgreSQL connection URL
-            postgres_url = f"postgresql://{config('db_user')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_name')}"
-
-            # Create the SQLAlchemy engine
-            engine = create_engine(postgres_url, poolclass=NullPool)
-
-            # Use the connection for GeoDataFrame.to_postgis
-            gdf.to_postgis(name=table_name, con=engine, schema='public', if_exists='append')
-
-            # Explicitly close the engine
-            engine.dispose()
+            return_dict[url_string] = gdf
 
             # Log the successful loading of features
             logging.info(f"Loaded by query: {where}: {self_url}")
@@ -69,7 +61,7 @@ class ArcGISFeatureServiceLoader(DataLoader):
 
     @staticmethod
     def get_description() -> str:
-        return 'ArcGIS Feature Service Loader'
+        return 'This data loader is designed for storing publicly accessible ArcGIS Feature Service data locally.'
 
     @staticmethod
     def validate(url):
@@ -112,6 +104,15 @@ class ArcGISFeatureServiceLoader(DataLoader):
         max_record_count = layer.properties.maxRecordCount
         logging.info(f"maxRecordCount: {max_record_count}")
 
+        # Get the geometry type of the feature layer
+        geometry_type = layer.properties.geometryType
+        logging.info(f"Geometry Type: {geometry_type}")
+
+        # Get the schema information
+        schema = layer.properties.fields
+        for field in schema:
+            logging.info(f"Field Name: {field['name']}, Type: {field['type']}")
+
         # Get objectIds of all the features
         result = layer.query(where="1=1", return_ids_only=True)
         id_field_name = result["objectIdFieldName"]
@@ -125,7 +126,9 @@ class ArcGISFeatureServiceLoader(DataLoader):
 
         request_number = 0;
         processes = []
-
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        init = True
         for i in range(0, total_record_count, max_record_count):
             request_number += 1
 
@@ -139,13 +142,13 @@ class ArcGISFeatureServiceLoader(DataLoader):
 
             # Fork a new process to load the features specified by the where condition
             process = Process(target=load_features,
-                              args=(self.url, self.table_name, where, wkid, error_event))
+                              args=(self.url, self.table_name, where, wkid, error_event, return_dict))
             process.start()
             processes.append(process)
 
             # To be nice to the remote server and the mediator
             # Start limited new processes to load data
-            if len(processes) == DATA_LOAD_MAX_PROCESSES:
+            if len(processes) == DATA_LOAD_MAX_PROCESSES or i + max_record_count >= total_record_count:
                 # wait and then continue
                 for process in processes:
                     process.join()
@@ -153,15 +156,43 @@ class ArcGISFeatureServiceLoader(DataLoader):
                 # Clear the processes list
                 processes.clear()
 
-        # Complete the left processes
-        if len(processes) > 0 and not error_event.is_set():
-            for process in processes:
-                process.join()
+                # Check if an error occurred in any process
+                if error_event.is_set():
+                    logging.info(f"An error occurred in one of the processes: {self.url}")
+                    return
 
-        # Check if an error occurred in any process
-        if error_event.is_set():
-            logging.info(f"An error occurred in one of the processes: {self.url}")
-            return
+                # Save to PostGIS
+                features_list = []
+                for url in return_dict.keys():
+                    features_list.append(return_dict[url])
+                final_gdf = pandas.concat(features_list)
+                return_dict.clear()
+
+                # Construct the PostgresSQL connection URL
+                postgres_url = f"postgresql://{config('db_user')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_name')}"
+
+                # Create the SQLAlchemy engine
+                engine = create_engine(postgres_url, poolclass=NullPool)
+                try:
+                    # pandas.set_option('display.max_rows', None)
+                    # pandas.set_option('display.max_columns', None)
+                    # print(final_gdf.dtypes)
+
+                    # ArcGIS sometimes return 10.0 for esriFieldTypeInteger; explicit cast it.
+                    final_gdf.replace([numpy.nan, numpy.inf, -numpy.inf], 0, inplace=True)
+                    for field in schema:
+                        if field['type'] == 'esriFieldTypeInteger':
+                            final_gdf[field['name']] = final_gdf[field['name']].astype('int64')
+
+                    # Use the connection for GeoDataFrame.to_postgis
+                    final_gdf.to_postgis(name=self.table_name, con=engine, schema='public', if_exists='replace' if init else 'append')
+                finally:
+                    # Explicitly close the engine
+                    engine.dispose()
+
+                # Set the init flag to be not initial
+                init = False
+                logging.info(f"Saved downloaded data into PostGIS: {self.url}: {final_gdf.shape}")
 
         logging.info(f"Completed data loading: {self.url}")
 
