@@ -19,7 +19,10 @@ class WCSLoader(DataLoader):
 
     @staticmethod
     def get_description() -> str:
-        return 'GeoServer WCS Loader'
+        return "This data loader is designed for storing publicly accessible WCS data locally through WCS " \
+               "version 2.0.1 or above. It accommodates simplified WCS URLs, such as " \
+               "https://wcs.foo.com?coverageid=mydata, and automatically supplements additional parameters " \
+               "as needed during the access. "
 
     @staticmethod
     def validate(url):
@@ -151,6 +154,8 @@ class WCSLoader(DataLoader):
             output_format = tiff_formats[0]
             logging.info(f'Output format: {output_format}')
         else:
+            logging.info(f"Failed loading: {base_url}: {coverage_id}")
+            DataLoader.set_loading_error(self.url, f"Failed loading: {base_url}: {coverage_id}")
             raise DataLoaderError(f"The GeoTIFF format is not supported for this coverage: {self.url}");
 
         # Download Data as GeoTIFF to a temporary file
@@ -162,6 +167,7 @@ class WCSLoader(DataLoader):
                                        width=int(high_limits[0]),
                                        height=int(high_limits[1]),
                                        timeout=120)
+        logging.info(f"URL: {get_coverage.geturl()}")
         with tempfile.NamedTemporaryFile(suffix=".tif", mode="wb") as temp:
             temp.write(get_coverage.read())
             temp.flush()  # Ensure data is written to the file

@@ -1,7 +1,10 @@
+import logging
 from abc import ABC, abstractmethod
 
 import psycopg2
 from decouple import config
+
+from src.query_parser.url_replacement_visitor import to_table_name
 
 
 class DataLoader(ABC):
@@ -91,6 +94,24 @@ class DataLoader(ABC):
 
                 # Execute the SQL statement
                 cursor.execute(update_sql, (error_message, url))
+
+                # Drop the associated table if exists
+                delete_sql = f"DROP TABLE IF EXISTS {to_table_name(url)}"
+                logging.info(f"Execute {delete_sql} ")
+                cursor.execute(delete_sql)
+
+                # Commit the transaction
+                conn.commit()
+
+    @staticmethod
+    def drop_table(url):
+        with psycopg2.connect(host=f"{config('db_host')}", dbname=f"{config('db_name')}",
+                              user=f"{config('db_user')}", password=f"{config('db_password')}") as conn:
+            with conn.cursor() as cursor:
+                # Drop the associated table if exists
+                delete_sql = f"DROP TABLE IF EXISTS {to_table_name(url)}"
+                logging.info(f"Execute {delete_sql} ")
+                cursor.execute(delete_sql)
 
                 # Commit the transaction
                 conn.commit()

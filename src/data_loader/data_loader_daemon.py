@@ -4,7 +4,6 @@
 # but pgBouncer does not pass the value of the environment variable PYTHONPATH to Cython.
 # So this code is needed to set the location of the Python code.
 import sys
-import traceback
 from multiprocessing import Process
 
 from decouple import config, UndefinedValueError
@@ -25,8 +24,8 @@ import psycopg2
 # Configure logging
 from decouple import config
 
+from src.data_loader.data_loader import DataLoader
 from src.data_loader.data_loader_factory import DataLoaderFactory
-from src.db.mediator_db import db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,11 +44,12 @@ def load_data(url, username, table_name):
             data_loader.load()
         else:
             logging.error(f"No data loader was found.: {url}")
-            db.set_loading_error(url, f"No data loader was found.")
+            DataLoader.set_loading_error(url, f"No data loader was found.")
     except Exception as e:
         # traceback.print_exc()
         logging.error(f"Encountered an error when loading {url}: {str(e)}.")
-        db.set_loading_error(url, f'Encountered an error: {str(e)}.')
+        DataLoader.set_loading_error(url, f'Encountered an error: {str(e)}.')
+        DataLoader.drop_table(url)
 
 
 async def handle_notifications():

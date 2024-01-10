@@ -1,8 +1,11 @@
+import concurrent
 import json
 import logging
 import subprocess
 import tempfile
-from multiprocessing import Event, Process
+import time
+import traceback
+from concurrent.futures import ProcessPoolExecutor
 from urllib.parse import urlparse, parse_qs, parse_qsl, ParseResult, urlencode
 from xml.etree.ElementTree import fromstring
 
@@ -15,10 +18,8 @@ from sqlalchemy import create_engine, NullPool
 
 from src.data_loader.data_loader import DataLoader, DataLoaderError
 
-DATA_LOAD_MAX_PROCESSES = config('data_load_max_processes', cast=int)
 DATA_LOAD_FEATURES_PER_PROCESS = config('data_load_features_per_process', cast=int)
 DATA_LOAD_RETRIES_ON_ERROR = config('data_load_retries_on_error', cast=int)
-DATA_LOAD_INIT_FEATURES = config('data_load_init_features', cast=int)
 
 
 # This WFS loader is designed with two key objectives:
@@ -56,7 +57,7 @@ def save_gml_to_db(gml_binary, table_name, mode):
 # This function is used by a new spawned process to save WFS_LOAD_FEATURES_PER_PROCESS
 # features starting from start_index to PostGIS
 def process_load_features(self_url, base_url, version, type_name, epsg_code, start_index,
-                          sort_by, table_name, output_format, vendor, error_event):
+                          sort_by, table_name, output_format, vendor):
     """
         Load features from a Web Feature Service (WFS) into a PostgresSQL/PostGIS database.
 
@@ -71,7 +72,6 @@ def process_load_features(self_url, base_url, version, type_name, epsg_code, sta
             table_name (str): The name of the PostgresSQL table to store the features.
             output_format (str): The name for the JSON output format.
             vendor (str): The name of the server vendor.
-            error_event (threading.Event): An event to signal if an error occurs during the data loading process.
 
         Raises:
             DataLoaderError: If the maximum number of retries is reached and the data loading process fails.
@@ -90,8 +90,7 @@ def process_load_features(self_url, base_url, version, type_name, epsg_code, sta
                 sort_by='objectid',
                 table_name='roads_table',
                 output_format='GEOJSON',
-                vendor='ArcGIS',
-                error_event=my_error_event
+                vendor='ArcGIS'
             )
     """
     # Set the number of retries in case of an error during loading
@@ -127,25 +126,18 @@ def process_load_features(self_url, base_url, version, type_name, epsg_code, sta
                 crs = pyproj.CRS.from_epsg(int(epsg_code))
                 gdf = geopandas.GeoDataFrame.from_features(json_features, crs=crs)
 
-                try:
-                    # Construct the PostgreSQL connection URL
-                    postgres_url = f"postgresql://{config('db_user')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_name')}"
+                # Construct the PostgreSQL connection URL
+                postgres_url = f"postgresql://{config('db_user')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_name')}"
 
-                    # Create the SQLAlchemy engine
-                    engine = create_engine(postgres_url, poolclass=NullPool)
+                # Create the SQLAlchemy engine
+                engine = create_engine(postgres_url, poolclass=NullPool)
 
-                    # Use the connection for GeoDataFrame.to_postgis
-                    gdf.to_postgis(name=table_name, con=engine, schema='public', if_exists='append')
+                # Use the connection for GeoDataFrame.to_postgis
+                gdf.to_postgis(name=table_name, con=engine, schema='public', if_exists='append')
 
-                    # Explicitly close the engine
-                    engine.dispose()
-                except Exception as e:
-                    # Handle any errors that occur during saving to PostGIS
-                    logging.error(f"Error saving to PostGIS: {e}")
-                    error_event.set()
-                    DataLoader.set_loading_error(self_url,
-                                                 f"Failed saving to PostGIS from {start_index} To {start_index + DATA_LOAD_FEATURES_PER_PROCESS}: {base_url}: {type_name}: {e}")
-                    return
+                # Explicitly close the engine
+                engine.dispose()
+
             elif 'gml' in output_format.lower():
                 # gdf = geopandas.read_file(StringIO(data.decode('utf-8')), driver='GML')
                 save_gml_to_db(data, table_name, 'append')
@@ -164,11 +156,12 @@ def process_load_features(self_url, base_url, version, type_name, epsg_code, sta
             tries += 1
 
     # If all retries fail, set the error event and raise an exception
-    error_event.set()
     DataLoader.set_loading_error(self_url,
                                  f"Failed loading from {start_index} To {start_index + DATA_LOAD_FEATURES_PER_PROCESS}: {base_url}: {type_name}")
     logging.info(
         f"Failed loading from {start_index} To {start_index + DATA_LOAD_FEATURES_PER_PROCESS}: {base_url}: {type_name}")
+    raise DataLoaderError(
+        f"Failed loading from {start_index} To {start_index + DATA_LOAD_FEATURES_PER_PROCESS}: {self_url}")
 
 
 class WFSLoader(DataLoader):
@@ -179,7 +172,9 @@ class WFSLoader(DataLoader):
 
     @staticmethod
     def get_description() -> str:
-        return 'GeoServer WFS Loader'
+        return "This data loader is designed for storing publicly accessible WFS data locally through WFS version " \
+               "1.1.0 or above. It accommodates simplified WFS URLs, such as https://wfs.foo.com?typename=mydata, " \
+               "and automatically supplements additional parameters as needed during the access. "
 
     @staticmethod
     def validate(url):
@@ -375,82 +370,51 @@ class WFSLoader(DataLoader):
         epsg_code = wfs.contents[typename].crsOptions[0].code
         crs = pyproj.CRS.from_epsg(int(epsg_code))
 
-        # Fetch the initial features
-        response = wfs.getfeature(typename=typename,
-                                  outputFormat=output_format,
-                                  startindex=start_index,
-                                  sortby=sort_by,
-                                  maxfeatures=DATA_LOAD_INIT_FEATURES)
-        data = response.read()
-        if 'json' in output_format.lower():
-            # Create a GeoDataFrame from the JSON features with the specified CRS
-            data_json = json.loads(data)
-            gdf = geopandas.GeoDataFrame.from_features(data_json, crs=crs)
+        # create a process pool with the default number of worker processes
+        executor = ProcessPoolExecutor()
 
-            # Construct the PostgresSQL connection URL
-            postgres_url = f"postgresql://{config('db_user')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_name')}"
+        # Check the pool size
+        current_pool_size = executor._max_workers
+        logging.info(f"current_pool_size: {current_pool_size}")
 
-            # Create the SQLAlchemy engine.
-            # Note: using NullPool to prevent SQLAlchemy starting a connection pool.
-            engine = create_engine(postgres_url, poolclass=NullPool)
+        available_slots = executor._max_workers - len(executor._processes)
+        logging.info(f"available_slots: {available_slots}")
 
-            # Use the connection for GeoDataFrame.to_postgis.
-            # Note: use 'replace' strategy to initialize the table
-            gdf.to_postgis(name=self.table_name, con=engine, schema='public', if_exists='replace')
-
-            # Explicitly close the engine
-            engine.dispose()
-
-        elif 'gml' in output_format.lower():
-            # GeoPandas is very buggy to load GML; Use ogr2ogr instead
-            # gdf = geopandas.read_file(StringIO(data.decode('utf-8')), driver='GML', crs=crs)
-            save_gml_to_db(data, self.table_name, 'overwrite')
-
-        logging.info(f"Loaded from {start_index} To {start_index + DATA_LOAD_INIT_FEATURES} out of {total}: {self.url}")
-
-        # Create an event to signal an error by processes
-        error_event = Event()
-
-        # Start more processes to save the next WFS_LOAD_FEATURES_PER_PROCESS features
-        start_index = start_index + DATA_LOAD_INIT_FEATURES;
-        processes = []
-        while total > start_index and not error_event.is_set():
-            process = Process(target=process_load_features,
-                              args=(self.url,
-                                    base_url,
-                                    version,
-                                    typename,
-                                    epsg_code,
-                                    start_index,
-                                    sort_by,
-                                    self.table_name,
-                                    output_format,
-                                    vendor,
-                                    error_event))
-            processes.append(process)
-            process.start()
+        futures = []
+        while total > start_index:
+            available_slots = executor._max_workers - len(executor._processes)
             logging.info(
-                f"Start loading {start_index} to {start_index + DATA_LOAD_FEATURES_PER_PROCESS} out of {total}: {self.url}")
-            start_index = start_index + DATA_LOAD_FEATURES_PER_PROCESS
+                f"--- Processing: from {start_index} to {start_index + DATA_LOAD_FEATURES_PER_PROCESS}: {self.url} "
+                f"available_slots: {available_slots} ---")
 
-            # To be nice to the remote server and the mediator
-            # Start limited new processes to load data
-            if len(processes) == DATA_LOAD_MAX_PROCESSES:
-                for process in processes:
-                    process.join()
+            logging.info(f"Submitting: from {start_index} to {start_index + DATA_LOAD_FEATURES_PER_PROCESS}")
+            future = executor.submit(process_load_features, self.url,
+                                     base_url,
+                                     version,
+                                     typename,
+                                     epsg_code,
+                                     start_index,
+                                     sort_by,
+                                     self.table_name,
+                                     output_format,
+                                     vendor)
+            futures.append(future)
 
-                # Clear the processes list
-                processes.clear()
+            if start_index == 0:
+                time.sleep(5)
 
-        # Complete the left processes
-        if len(processes) > 0 and not error_event.is_set():
-            for process in processes:
-                process.join()
+            start_index += DATA_LOAD_FEATURES_PER_PROCESS
 
-        # Check if an error occurred in any process
-        if error_event.is_set():
-            logging.info(f"An error occurred in one of the processes: {self.url}")
-            return
+        # Wait for all tasks to complete
+        done, _ = concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
+        for future in done:
+            # Process errors
+            if future.exception():
+                executor.shutdown()
+                concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
+                DataLoader.set_loading_error(self.url, f'Failed downloading data: {future.exception()}')
+                logging.info(f'Failed fetching data: {future.exception()}')
+                return
 
         logging.info(f"Completed data loading: {self.url}")
 

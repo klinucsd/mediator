@@ -22,6 +22,7 @@ from src.query_parser.list_data_loaders_statement import ListDataLoadersStatemen
 
 from src.data_loader.data_loader import DataLoaderError
 
+
 def rewrite_query(username, query, in_transaction):
     """
     Rewrite the given query to a translated SQL and implement the functions in the query.
